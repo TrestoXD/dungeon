@@ -25,7 +25,7 @@ public class Display extends Canvas implements Runnable{
 	
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 600;
-	public static final String TITLE = "Dungeon Pre-Alpha 0.01";
+	public static final String TITLE = "Dungeon Pre-Alpha 0.0.1";
 	
 	private Thread thread;
 	private BufferedImage img;
@@ -40,6 +40,8 @@ public class Display extends Canvas implements Runnable{
 	private int newY = 0;
 	
 	private int fps;
+	
+	public static int MouseSpeed;
 	
 	public Display() {
 		Dimension size = new Dimension(WIDTH, HEIGHT);
@@ -93,6 +95,7 @@ public class Display extends Canvas implements Runnable{
 			long passedTime = currentTime - previousTime;
 			previousTime = currentTime;
 			unprocessedSeconds += passedTime / 1000000000.0;
+			requestFocus();
 			
 			while (unprocessedSeconds > secondsPerTick) {
 				tick();
@@ -126,6 +129,7 @@ public class Display extends Canvas implements Runnable{
 				Controller.turnLeft = false;
 				Controller.turnRight = false;
 			}
+			MouseSpeed = Math.abs(newX - oldX);
 			oldX = newX;
 
 			newY = InputHandler.MouseY;

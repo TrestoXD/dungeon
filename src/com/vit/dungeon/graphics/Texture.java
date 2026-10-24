@@ -6,6 +6,7 @@ import javax.imageio.ImageIO;
 
 public class Texture {
 	public static Render block = loadBitmap("/textures/cobblestone.png");
+	public static Render stone = loadBitmap("/textures/stone.png");
 	
 	public static Render loadBitmap(String fileName) {
 		try {
