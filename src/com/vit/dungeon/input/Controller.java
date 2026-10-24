@@ -11,7 +11,7 @@ public class Controller {
 	public void tick(boolean forward, boolean back, boolean left, boolean right, boolean jump, boolean crouch, boolean sprint) {
 		double rotationSpeed = 0.004 * Display.MouseSpeed;
 		double walkSpeed = 0.5;
-		double jumpHeight = 0.6;
+		double jumpHeight = 0.8;
 		double crouchHeight = 0.3;
 		double xMove = 0;
 		double zMove = 0;

@@ -1,5 +1,7 @@
 package com.vit.dungeon.graphics;
 
+import java.awt.datatransfer.Clipboard;
+
 import com.vit.dungeon.Game;
 import com.vit.dungeon.input.Controller;
 
@@ -19,11 +21,13 @@ public class Render3D extends Render {
 	public void floor(Game game) {
 
 		double floorPosition = 8;
-		double ceilingPosition = 8;
+		double ceilingPosition = 16;
 		forward = game.controls.z;
 		right = game.controls.x;
 		up = game.controls.y;
 		walking = 0;
+		
+		up += 4;
 
 	    //yLook = game.controls.ylook;
 		double rotation = game.controls.rotation;
@@ -94,6 +98,27 @@ public class Render3D extends Render {
 		double xPixelLeft = (rotLeftSideX / rotLeftSideZ * height + width / 2);
 		double xPixelRight = (rotRightSideX / rotRightSideZ * height + width / 2);
 
+		double tex30 = 0;
+		double tex40 = 8;
+		double clip = 0.5;
+		
+		if(rotLeftSideZ < clip && rotRightSideZ < clip) {
+			return;
+		}
+		
+		if(rotLeftSideZ < clip) {
+			Double clip0 = (clip - rotLeftSideZ) / (rotRightSideZ - rotLeftSideZ);
+			rotLeftSideZ = rotLeftSideZ + (rotRightSideZ - rotLeftSideZ) * clip0;
+			rotLeftSideX = rotLeftSideX + (rotRightSideX - rotLeftSideX) * clip0;
+			tex30 = tex30 + (tex40 - tex30) * clip0;
+		}
+		if(rotRightSideZ < clip) {
+			Double clip0 = (clip - rotLeftSideZ) / (rotRightSideZ - rotLeftSideZ);
+			rotRightSideZ = rotLeftSideZ + (rotRightSideZ - rotLeftSideZ) * clip0;
+			rotRightSideX = rotLeftSideX + (rotRightSideX - rotLeftSideX) * clip0;
+			tex30 = tex30 + (tex40 - tex30) * clip0;
+		}
+		
 		if (xPixelLeft >= xPixelRight) {
 		return;
 		}
