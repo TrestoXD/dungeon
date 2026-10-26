@@ -3,6 +3,7 @@ package com.vit.dungeon.graphics;
 import java.util.Random;
 
 import com.vit.dungeon.Game;
+import com.vit.dungeon.world.World;
 
 public class Screen extends Render{
 	private Render test;
@@ -24,15 +25,6 @@ public class Screen extends Render{
 		}
 		
 		render.floor(game);
-		render.renderWall(0.5, 0.5, 1, 1.5, 0);
-		render.renderWall(0, 0.5, 1, 1, 0);
-		render.renderWall(0, 0, 1.5, 1, 0);
-		render.renderWall(0.5, 0, 1.5, 1.5, 0);
-		//CUBE 2
-		render.renderWall(0.5, 0.5, 1, 1.5, 0.5);
-		render.renderWall(0, 0.5, 1, 1, 0.5);
-		render.renderWall(0, 0, 1.5, 1, 0.5);
-		render.renderWall(0.5, 0, 1.5, 1.5, 0.5);
 		render.renderDistanceLimiter();
 		draw(render, 0, 0);
 	}

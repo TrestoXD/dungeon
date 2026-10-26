@@ -3,13 +3,16 @@ package com.vit.dungeon;
 import java.awt.event.KeyEvent;
 
 import com.vit.dungeon.input.Controller;
+import com.vit.dungeon.world.World;
 
 public class Game {
 	public int time;
 	public Controller controls;
+	public World world;
 	
 	public Game() {
 		controls = new Controller(); 
+		world = new World(8, 8);
 	}
 
 	public void tick(boolean[] key) {

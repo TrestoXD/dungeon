@@ -1,13 +1,15 @@
 package com.vit.dungeon.graphics;
 
-import java.awt.datatransfer.Clipboard;
 
 import com.vit.dungeon.Game;
 import com.vit.dungeon.input.Controller;
+import com.vit.dungeon.world.Block;
+import com.vit.dungeon.world.World;
 
 public class Render3D extends Render {
 
 	public double[] zBuffer;
+	public double[] zBufferWall;
 	private double renderdistance = 5000;
 	private int spriteSheetWidth = 16;
 	private double forward, right, up, cosine, sine, walking, yLook;
@@ -16,10 +18,15 @@ public class Render3D extends Render {
 	public Render3D(int width, int height) {
 		super(width, height);
 		zBuffer = new double[width * height];
+		zBufferWall = new double [width];
 	}
 
 	public void floor(Game game) {
 
+		for (int x = 0; x < width; x++) {
+			zBufferWall[x] = 0;
+		}
+		
 		double floorPosition = 8;
 		double ceilingPosition = 16;
 		forward = game.controls.z;
@@ -76,6 +83,31 @@ public class Render3D extends Render {
 				}
 			}
 		}
+		World world = game.world;
+		int size = 8;
+		for (int xBlock = -size; xBlock <= size; xBlock++ ) {
+			for (int zBlock = -size; zBlock < size; zBlock++) {
+				Block block = world.create(xBlock, zBlock);
+				Block east = world.create(xBlock+1, zBlock);
+				Block south = world.create(xBlock, zBlock + 1);
+			
+				if(block.solid) {
+					if(!east.solid) {
+						renderWall(xBlock +1, xBlock+1, zBlock, zBlock + 1, 0);
+					}
+					if(!south.solid) {
+						renderWall(xBlock +1, xBlock, zBlock + 1, zBlock + 1, 0);
+					}
+				}else {
+					if(east.solid) {
+						renderWall(xBlock +1, xBlock+1, zBlock + 1, zBlock, 0);
+					}
+					if(south.solid) {
+						renderWall(xBlock, xBlock+1, zBlock +1, zBlock + 1, 0);
+					}
+				}
+			}
+		}
 	}
 
 	public void renderWall (double xLeft, double xRight, double zDistanceLeft, double zDistanceRight, double yHeight) {
@@ -95,11 +127,8 @@ public class Render3D extends Render {
 		double yCornerBR = ((+0.5 - yHeight) - (-up / 16 + -(walking / 16))) * 2;
 		double rotRightSideZ = zcRight * cosine + xcRight * sine;
 
-		double xPixelLeft = (rotLeftSideX / rotLeftSideZ * height + width / 2);
-		double xPixelRight = (rotRightSideX / rotRightSideZ * height + width / 2);
-
 		double tex30 = 0;
-		double tex40 = 8;
+		double tex40 = 16;
 		double clip = 0.5;
 		
 		if(rotLeftSideZ < clip && rotRightSideZ < clip) {
@@ -118,6 +147,9 @@ public class Render3D extends Render {
 			rotRightSideX = rotLeftSideX + (rotRightSideX - rotLeftSideX) * clip0;
 			tex30 = tex30 + (tex40 - tex30) * clip0;
 		}
+
+		double xPixelLeft = (rotLeftSideX / rotLeftSideZ * height + width / 2);
+		double xPixelRight = (rotRightSideX / rotRightSideZ * height + width / 2);
 		
 		if (xPixelLeft >= xPixelRight) {
 		return;
@@ -145,8 +177,14 @@ public class Render3D extends Render {
 		
 		for (int x = xPixelLeftInt; x < xPixelRightInt; x++) {
 			double pixelRotation = (x - xPixelLeft) / (xPixelRight - xPixelLeft);
+			double zWall = (tex1 + (tex2 - tex1) * pixelRotation);
 			
-			int xTexture = (int) ((tex3 + tex4 * pixelRotation) / (tex1 + (tex2 - tex1) * pixelRotation));
+			if(zBufferWall[x] > zWall) {
+				continue;
+			}
+			zBufferWall[x] = zWall;
+			
+			int xTexture = (int) ((tex3 + tex4 * pixelRotation) / zWall);
 			
 			double yPixelTop = yPixelLeftTop + (yPixelRightTop - yPixelLeftTop) * pixelRotation;
 			double yPixelBottom = yPixelLeftBottom + (yPixelRightBottom - yPixelLeftBottom) * pixelRotation;
