@@ -6,7 +6,7 @@ import java.awt.MouseInfo;
 import com.vit.dungeon.Display;
 
 public class Controller {
-	public double x, y, z, rotation, ylook, xa, za, rotationa, ylooka;
+	public static double x, y, z, rotation, ylook, xa, za, rotationa, ylooka;
 	public static boolean turnLeft = false;
 	public static boolean turnRight = false;
 	public static boolean walk, sprintWalk, crouchWalk = false;

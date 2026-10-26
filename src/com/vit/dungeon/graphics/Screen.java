@@ -24,10 +24,6 @@ public class Screen extends Render{
 			pixels[i] = 0; 
 		}
 		render.floor(game);
-		render.renderWall(1, 1, 2, 3, 2);
-		render.renderWall(0, 1, 2, 2, 2);
-		render.renderWall(0, 0, 3, 2, 2);
-		render.renderWall(1, 0, 3, 3, 2);
 		render.renderDistanceLimiter();
 		draw(render, 0, 0);
 	}

@@ -85,26 +85,37 @@ public class Render3D extends Render {
 		}
 		World world = game.world;
 		int size = 8;
-		for (int xBlock = -size; xBlock <= size; xBlock++ ) {
-			for (int zBlock = -size; zBlock < size; zBlock++) {
-				Block block = world.create(xBlock, zBlock);
-				Block east = world.create(xBlock+1, zBlock);
-				Block south = world.create(xBlock, zBlock + 1);
-			
-				if(block.solid) {
-					if(!east.solid) {
-						renderWall(xBlock +1, xBlock+1, zBlock, zBlock + 1, 0);
+		int ysize = 3;
+		for (int yBlock = 0; yBlock < ysize; yBlock++) {
+			for (int xBlock = 0; xBlock <= size -1; xBlock++ ) {
+				for (int zBlock = 0; zBlock < size; zBlock++) {
+					Block block = world.create(xBlock, zBlock);
+					Block east = world.create(xBlock+1, zBlock);
+					Block south = world.create(xBlock, zBlock + 1);
+				
+					if(block.solid) {
+					renderWall(xBlock + 1, xBlock + 1, zBlock, zBlock + 1, yBlock);
+					renderWall(xBlock, xBlock + 1, zBlock, zBlock, yBlock);
+					renderWall(xBlock, xBlock, zBlock+1, zBlock, yBlock);
+					renderWall(xBlock + 1, xBlock, zBlock+1, zBlock+1 , yBlock);
+					}else {
+						
 					}
-					if(!south.solid) {
-						renderWall(xBlock +1, xBlock, zBlock + 1, zBlock + 1, 0);
-					}
-				}else {
-					if(east.solid) {
-						renderWall(xBlock +1, xBlock+1, zBlock + 1, zBlock, 0);
-					}
-					if(south.solid) {
-						renderWall(xBlock, xBlock+1, zBlock +1, zBlock + 1, 0);
-					}
+					/*if(block.solid) {
+						if(!east.solid) {
+							renderWall(xBlock +1, xBlock+1, zBlock, zBlock + 1, 2);
+						}
+						if(!south.solid) {
+							renderWall(xBlock +1, xBlock, zBlock + 1, zBlock + 1, 1);
+						}
+					}else {
+						if(east.solid) {
+							renderWall(xBlock +1, xBlock+1, zBlock + 1, zBlock, 3);
+						}
+						if(south.solid) {
+							renderWall(xBlock, xBlock+1, zBlock +1, zBlock + 1, 0);
+						}
+					}*/
 				}
 			}
 		}

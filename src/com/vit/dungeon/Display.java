@@ -40,6 +40,9 @@ public class Display extends Canvas implements Runnable{
 	private int newY = 0;
 	
 	private int fps;
+	private int x;
+	private int y;
+	private int z;
 	
 	public static int MouseSpeed;
 	
@@ -102,6 +105,11 @@ public class Display extends Canvas implements Runnable{
 				unprocessedSeconds -= secondsPerTick;
 				ticked = true;
 				tickCount++;
+				if(tickCount % 3 == 0) {
+					x = (int) Controller.x / 10;
+					y = (int) Controller.y / 10;
+					z = (int) Controller.z / 10;
+				}
 				if(tickCount % 60 == 0) {
 					//System.out.println(frames + " FPS");
 					fps = frames;
@@ -159,6 +167,7 @@ public class Display extends Canvas implements Runnable{
 		for(int i = 0; i < WIDTH * HEIGHT; i++) {
 			pixels[i] = screen.pixels[i];
 		}
+		String Block_coordenates = ("Block: " + + x + " " + y + " " + z);
 		
 		screen.render(game);
 		
@@ -167,6 +176,7 @@ public class Display extends Canvas implements Runnable{
 		g.setFont(new Font("Hack",0,16));
 		g.setColor(Color.CYAN);
 		g.drawString(fps + " FPS", 24, 32);
+		g.drawString("Block: " + + x + " " + y + " " + z, WIDTH - (Block_coordenates.length() * 10 + 24), 32);
 		g.dispose();
 		bs.show();
 	}
