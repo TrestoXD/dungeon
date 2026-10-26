@@ -4,15 +4,19 @@ import java.awt.Robot;
 import java.awt.MouseInfo;
 
 import com.vit.dungeon.Display;
+import com.vit.dungeon.world.World;
 
 public class Controller {
-	public static double x, y, z, rotation, ylook, xa, za, rotationa, ylooka;
+	public static double x = 24.0;
+	public static double y = 0;
+	public static double z = 24.0;
+	public static double rotation, ylook, xa, za, rotationa, ylooka;
 	public static boolean turnLeft = false;
 	public static boolean turnRight = false;
 	public static boolean walk, sprintWalk, crouchWalk = false;
 	private static boolean isMouseFrozen = false;
 	
-	public void tick(boolean forward, boolean back, boolean left, boolean right, boolean jump, boolean crouch, boolean sprint, boolean escape) {
+	public void tick(boolean forward, boolean back, boolean left, boolean right, boolean jump, boolean crouch, boolean sprint, boolean escape, World world) {
 		double rotationSpeed = 0.004 * Display.MouseSpeed;
 		double walkSpeed = 0.5;
 		double jumpHeight = 0.8;
@@ -75,10 +79,45 @@ public class Controller {
 		xa += (xMove * Math.cos(rotation) + zMove * Math.sin(rotation)) * walkSpeed;
 		za += (zMove * Math.cos(rotation) - xMove * Math.sin(rotation)) * walkSpeed;
 	
-		x += xa;
-		y *= 0.9;
-		z += za;
+		double playerRadius = 2.5;
+		
+		double nextX = x +xa;
+		if (xa > 0) { // Moviéndose hacia la derecha (X+)
+	        if (!world.isSolidAt(nextX + playerRadius, z - playerRadius) && 
+	            !world.isSolidAt(nextX + playerRadius, z + playerRadius)) {
+	            x = nextX;
+	        } else {
+	            xa = 0; // Se frena la inercia al chocar
+	        }
+	    } else if (xa < 0) { // Moviéndose hacia la izquierda (X-)
+	        if (!world.isSolidAt(nextX - playerRadius, z - playerRadius) && 
+	            !world.isSolidAt(nextX - playerRadius, z + playerRadius)) {
+	            x = nextX;
+	        } else {
+	            xa = 0;
+	        }
+	    }
+
+	    // Evaluar y aplicar movimiento en el eje Z
+	    double nextZ = z + za;
+	    if (za > 0) { // Moviéndose hacia abajo/adelante en la rejilla (Z+)
+	        if (!world.isSolidAt(x - playerRadius, nextZ + playerRadius) && 
+	            !world.isSolidAt(x + playerRadius, nextZ + playerRadius)) {
+	            z = nextZ;
+	        } else {
+	            za = 0;
+	        }
+	    } else if (za < 0) { // Moviéndose hacia arriba/atrás en la rejilla (Z-)
+	        if (!world.isSolidAt(x - playerRadius, nextZ - playerRadius) && 
+	            !world.isSolidAt(x + playerRadius, nextZ - playerRadius)) {
+	            z = nextZ;
+	        } else {
+	            za = 0;
+	        }
+	    }
+		
 		xa *= 0.1;
+		y *= 0.96;
 		za *= 0.1;
 		rotation += rotationa;
 		rotationa *= 0.5;

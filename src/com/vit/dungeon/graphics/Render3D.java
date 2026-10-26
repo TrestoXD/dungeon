@@ -87,37 +87,41 @@ public class Render3D extends Render {
 		int size = 8;
 		int ysize = 3;
 		for (int yBlock = 0; yBlock < ysize; yBlock++) {
-			for (int xBlock = 0; xBlock <= size -1; xBlock++ ) {
-				for (int zBlock = 0; zBlock < size; zBlock++) {
-					Block block = world.create(xBlock, zBlock);
-					Block east = world.create(xBlock+1, zBlock);
-					Block south = world.create(xBlock, zBlock + 1);
-				
-					if(block.solid) {
-					renderWall(xBlock + 1, xBlock + 1, zBlock, zBlock + 1, yBlock);
-					renderWall(xBlock, xBlock + 1, zBlock, zBlock, yBlock);
-					renderWall(xBlock, xBlock, zBlock+1, zBlock, yBlock);
-					renderWall(xBlock + 1, xBlock, zBlock+1, zBlock+1 , yBlock);
-					}else {
-						
-					}
-					/*if(block.solid) {
-						if(!east.solid) {
-							renderWall(xBlock +1, xBlock+1, zBlock, zBlock + 1, 2);
-						}
-						if(!south.solid) {
-							renderWall(xBlock +1, xBlock, zBlock + 1, zBlock + 1, 1);
-						}
-					}else {
-						if(east.solid) {
-							renderWall(xBlock +1, xBlock+1, zBlock + 1, zBlock, 3);
-						}
-						if(south.solid) {
-							renderWall(xBlock, xBlock+1, zBlock +1, zBlock + 1, 0);
-						}
-					}*/
-				}
-			}
+		    for (int xBlock = 0; xBlock < size; xBlock++ ) {
+		        for (int zBlock = 0; zBlock < size; zBlock++) {
+		            
+		            Block block = world.create(xBlock, zBlock);
+		            
+		            if(block.solid) {
+		                
+		               
+		                Block north = world.create(xBlock, zBlock - 1);
+		                Block south = world.create(xBlock, zBlock + 1);
+		                Block west  = world.create(xBlock - 1, zBlock);
+		                Block east  = world.create(xBlock + 1, zBlock);
+		                
+		                
+		                if (north != null && !north.solid) {
+		                    renderWall(xBlock, xBlock + 1, zBlock, zBlock, yBlock);
+		                }
+		                
+		                
+		                if (south != null && !south.solid) {
+		                    renderWall(xBlock + 1, xBlock, zBlock + 1, zBlock + 1, yBlock);
+		                }
+		                
+		                
+		                if (west != null && !west.solid) {
+		                    renderWall(xBlock, xBlock, zBlock + 1, zBlock, yBlock);
+		                }
+		                
+		                
+		                if (east != null && !east.solid) {
+		                    renderWall(xBlock + 1, xBlock + 1, zBlock, zBlock + 1, yBlock);
+		                }
+		            }
+		        }
+		    }
 		}
 	}
 
@@ -219,6 +223,13 @@ public class Render3D extends Render {
 			}
 			
 		}
+	}
+	
+	public void renderBlock(int xbpos, int ybpos, int zbpos) {
+		renderWall(xbpos + 1, xbpos + 1, zbpos, zbpos + 1, ybpos);
+		renderWall(xbpos, xbpos + 1, zbpos, zbpos, ybpos);
+		renderWall(xbpos, xbpos, zbpos+1, zbpos, ybpos);
+		renderWall(xbpos + 1, xbpos, zbpos+1, zbpos+1 , ybpos);
 	}
 	
 	public void renderDistanceLimiter() {

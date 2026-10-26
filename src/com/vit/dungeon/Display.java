@@ -18,6 +18,7 @@ import com.vit.dungeon.graphics.Render;
 import com.vit.dungeon.graphics.Screen;
 import com.vit.dungeon.input.Controller;
 import com.vit.dungeon.input.InputHandler;
+import com.vit.dungeon.input.MouseController;
 
 
 public class Display extends Canvas implements Runnable{
@@ -25,7 +26,7 @@ public class Display extends Canvas implements Runnable{
 	
 	public static final int WIDTH = 800;
 	public static final int HEIGHT = 600;
-	public static final String TITLE = "Dungeon Pre-Alpha 0.0.1";
+	public static final String TITLE = "Dungeon Pre-Alpha 0.0.2";
 	
 	private Thread thread;
 	private BufferedImage img;
@@ -34,6 +35,7 @@ public class Display extends Canvas implements Runnable{
 	private boolean running = false;
 	private int[] pixels;
 	private InputHandler input;
+	private MouseController mouseController;
 	private int oldX = 0;
 	private int oldY = 0;
 	private int newX = 0;
@@ -106,9 +108,9 @@ public class Display extends Canvas implements Runnable{
 				ticked = true;
 				tickCount++;
 				if(tickCount % 3 == 0) {
-					x = (int) Controller.x / 10;
-					y = (int) Controller.y / 10;
-					z = (int) Controller.z / 10;
+					x = (int) Controller.x / 16;
+					y = (int) Controller.y / 16;
+					z = (int) Controller.z / 16;
 				}
 				if(tickCount % 60 == 0) {
 					//System.out.println(frames + " FPS");
@@ -123,23 +125,20 @@ public class Display extends Canvas implements Runnable{
 			}
 			render();
 			frames++;
-			newX = InputHandler.MouseX;
-			if(newX > oldX) {
-				//System.out.println("right");
-				Controller.turnRight = true;
-			}
-			if(newX < oldX) {
-				//System.out.println("left");
-				Controller.turnLeft = true;
-			}
-			if(newX == oldX) {
-				//System.out.println("still");
-				Controller.turnLeft = false;
-				Controller.turnRight = false;
-			}
-			MouseSpeed = Math.abs(newX - oldX);
-			oldX = newX;
+			if (input.key[java.awt.event.KeyEvent.VK_ESCAPE]) {
+                mouseController.unlock();
+            }
 
+            // Si el ratón está capturado, actualiza deltas y centra de forma automática
+            if (mouseController.isLocked()) {
+                mouseController.update();
+            } else {
+                // Si está desbloqueado, puedes mantener tu lectura clásica por teclado si quieres
+                Controller.turnLeft = input.key[java.awt.event.KeyEvent.VK_LEFT];
+                Controller.turnRight = input.key[java.awt.event.KeyEvent.VK_RIGHT];
+                MouseSpeed = 4; // Velocidad estándar de giro por teclado
+            }
+            /*
 			newY = InputHandler.MouseY;
 			int deltaY = newY - oldY;
 
@@ -149,7 +148,7 @@ public class Display extends Canvas implements Runnable{
 
 
 			oldY = newY;
-
+			*/
 			//System.out.println("X: " + InputHandler.MouseX + " Y: " + InputHandler.MouseY);
 		}
 	}
@@ -194,6 +193,14 @@ public class Display extends Canvas implements Runnable{
 		frame.setLocationRelativeTo(null);
 		frame.setResizable(false);
 		frame.setVisible(true);
+		
+		game.mouseController = new MouseController(frame, game.game);
+		game.addMouseListener(new java.awt.event.MouseAdapter() {
+			@Override
+			public void mousePressed(java.awt.event.MouseEvent e) {
+				game.mouseController.lock();
+			}
+		});
 		
 		System.out.println("Running...");
 		

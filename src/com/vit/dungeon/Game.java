@@ -26,7 +26,7 @@ public class Game {
 		boolean sprint = key[KeyEvent.VK_CONTROL];
 		boolean esc = key[KeyEvent.VK_ESCAPE];
 		
-		controls.tick(fordward, back, left, right, jump, crouch, sprint,esc);
+		controls.tick(fordward, back, left, right, jump, crouch, sprint,esc, world);
 		try {
 			controls.freezeMouse();
 		} catch (Exception e) {

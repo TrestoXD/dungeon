@@ -4,6 +4,7 @@ public class World {
 	public Block[] blocks;
 	public final int width;
 	public final int height;
+	public final int blockSize = 16;
 	
 	public World(int width, int height) {
 		this.width = width;
@@ -37,5 +38,17 @@ public class World {
 			return Block.solidWall;
 		}
 		return blocks[x + y * width];
+	}
+	
+	public boolean isSolidAt(double x, double z) {
+	    int gridX = (int) Math.floor(x / blockSize);
+	    int gridZ = (int) Math.floor(z / blockSize);
+
+	    if (gridX < 0 || gridX >= width || gridZ < 0 || gridZ >= height) {
+	        return false; 
+	    }
+
+	    Block block = blocks[gridX + gridZ * width];
+	    return block != null && block.solid;
 	}
 }
