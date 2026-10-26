@@ -28,13 +28,13 @@ public class Render3D extends Render {
 		}
 		
 		double floorPosition = 8;
-		double ceilingPosition = 16;
+		double ceilingPosition = 40;
 		forward = game.controls.z;
 		right = game.controls.x;
 		up = game.controls.y;
 		walking = 0;
 		
-		up += 4;
+		up += 12;
 
 	    //yLook = game.controls.ylook;
 		double rotation = game.controls.rotation;
@@ -115,7 +115,7 @@ public class Render3D extends Render {
 		double zcLeft = ((zDistanceLeft) - (forward / 16)) * 2;
 
 		double rotLeftSideX = xcLeft * cosine - zcLeft * sine;
-		double yCornerTL = ( (-yHeight) - (-up / 16 + -(walking / 16))) * 2;
+		double yCornerTL = ((-0.5 -yHeight) - (-up / 16 + -(walking / 16))) * 2;
 		double yCornerBL = ((+0.5 - yHeight) - (-up / 16 + -(walking / 16))) * 2;
 		double rotLeftSideZ = zcLeft * cosine + xcLeft * sine;
 
@@ -123,8 +123,8 @@ public class Render3D extends Render {
 		double zcRight = ((zDistanceRight) - (forward / 16)) * 2;
 
 		double rotRightSideX = xcRight * cosine - zcRight * sine;
-		double yCornerTR = ((-yHeight) - (-up / 16 + -(walking / 16))) * 2;
-		double yCornerBR = ((+0.5 - yHeight) - (-up / 16 + -(walking / 16))) * 2;
+		double yCornerTR = ((-0.5 -yHeight) - (-up / 16 + -(walking / 16))) * 2;
+		double yCornerBR = ((+0.5d - yHeight) - (-up / 16 + -(walking / 16))) * 2;
 		double rotRightSideZ = zcRight * cosine + xcRight * sine;
 
 		double tex30 = 0;

@@ -1,5 +1,8 @@
 package com.vit.dungeon.input;
 
+import java.awt.Robot;
+import java.awt.MouseInfo;
+
 import com.vit.dungeon.Display;
 
 public class Controller {
@@ -7,8 +10,9 @@ public class Controller {
 	public static boolean turnLeft = false;
 	public static boolean turnRight = false;
 	public static boolean walk, sprintWalk, crouchWalk = false;
+	private static boolean isMouseFrozen = false;
 	
-	public void tick(boolean forward, boolean back, boolean left, boolean right, boolean jump, boolean crouch, boolean sprint) {
+	public void tick(boolean forward, boolean back, boolean left, boolean right, boolean jump, boolean crouch, boolean sprint, boolean escape) {
 		double rotationSpeed = 0.004 * Display.MouseSpeed;
 		double walkSpeed = 0.5;
 		double jumpHeight = 0.8;
@@ -64,6 +68,9 @@ public class Controller {
 		if(!sprint) {
 			sprintWalk = false;
 		}
+		if(escape) {
+			// BLOQUEA EL MOUSE
+		}
 		
 		xa += (xMove * Math.cos(rotation) + zMove * Math.sin(rotation)) * walkSpeed;
 		za += (zMove * Math.cos(rotation) - xMove * Math.sin(rotation)) * walkSpeed;
@@ -81,5 +88,19 @@ public class Controller {
 		
 		if (ylook > 360) ylook = 360;
 		if (ylook < -300) ylook = -300;
+	}
+
+	public void freezeMouse() throws Exception{
+		Robot robot = new Robot();
+		while(isMouseFrozen) {
+			int x = MouseInfo.getPointerInfo().getLocation().x;
+			int y = MouseInfo.getPointerInfo().getLocation().y;
+			robot.mouseMove(x, y);
+			Thread.sleep(10);
+		}
+	}
+	
+	public static void toggleMouseFreeze() {
+		isMouseFrozen = !isMouseFrozen;
 	}
 }

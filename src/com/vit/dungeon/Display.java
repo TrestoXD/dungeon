@@ -188,5 +188,6 @@ public class Display extends Canvas implements Runnable{
 		System.out.println("Running...");
 		
 		game.start();
+		
 	}
 }

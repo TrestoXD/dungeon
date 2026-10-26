@@ -24,7 +24,14 @@ public class Game {
 		boolean jump = key[KeyEvent.VK_SPACE];
 		boolean crouch = key[KeyEvent.VK_SHIFT];
 		boolean sprint = key[KeyEvent.VK_CONTROL];
+		boolean esc = key[KeyEvent.VK_ESCAPE];
 		
-		controls.tick(fordward, back, left, right, jump, crouch, sprint);
+		controls.tick(fordward, back, left, right, jump, crouch, sprint,esc);
+		try {
+			controls.freezeMouse();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
