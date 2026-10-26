@@ -73,8 +73,8 @@ public class Render3D extends Render {
 				depth *= z;
 				double xx = depth * cosine + z * sine;
 				double yy = z * cosine - depth * sine;
-				int xPix = (int) ((xx + right) * 2);
-				int yPix = (int) ((yy + forward) * 2);
+				int xPix = (int) (xx + right);
+				int yPix = (int) (yy + forward);
 				zBuffer[x + y * width] = z;
 				pixels[x + y * width] = Texture.block.pixels[(xPix & 15) + (yPix & 15) * spriteSheetWidth];
 
