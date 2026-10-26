@@ -55,7 +55,7 @@ public class Controller {
 			crouchWalk = true;
 		}
 		if(sprint) {
-			walkSpeed = 0.75;
+			walkSpeed = 1.25;
 			sprintWalk = true;
 		}
 		

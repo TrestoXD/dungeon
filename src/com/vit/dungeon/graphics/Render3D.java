@@ -34,7 +34,7 @@ public class Render3D extends Render {
 		up = game.controls.y;
 		walking = 0;
 		
-		up += 12;
+		up += 16;
 
 	    //yLook = game.controls.ylook;
 		double rotation = game.controls.rotation;
@@ -54,7 +54,7 @@ public class Render3D extends Render {
 				z = (floorPosition + up + walking) / ceiling;
 			}
 			if (Controller.sprintWalk && Controller.walk) {
-				walking = Math.sin(game.time / 12.0) * 1;
+				walking = Math.sin(game.time / 4.5) * 2;
 				z = (floorPosition + up + walking) / ceiling;
 			}
 			
