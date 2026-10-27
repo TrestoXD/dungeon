@@ -7,9 +7,9 @@ import com.vit.dungeon.Display;
 import com.vit.dungeon.world.World;
 
 public class Controller {
-	public static double x = 24.0;
+	public static double x = 0.0;
 	public static double y = 0;
-	public static double z = 24.0;
+	public static double z = 0.0;
 	public static double rotation, ylook, xa, za, rotationa, ylooka;
 	public static boolean turnLeft = false;
 	public static boolean turnRight = false;
@@ -73,7 +73,7 @@ public class Controller {
 			sprintWalk = false;
 		}
 		if(escape) {
-			// BLOQUEA EL MOUSE
+			
 		}
 		
 		xa += (xMove * Math.cos(rotation) + zMove * Math.sin(rotation)) * walkSpeed;
@@ -82,14 +82,14 @@ public class Controller {
 		double playerRadius = 2.5;
 		
 		double nextX = x +xa;
-		if (xa > 0) { // Moviéndose hacia la derecha (X+)
+		if (xa > 0) { 
 	        if (!world.isSolidAt(nextX + playerRadius, z - playerRadius) && 
 	            !world.isSolidAt(nextX + playerRadius, z + playerRadius)) {
 	            x = nextX;
 	        } else {
-	            xa = 0; // Se frena la inercia al chocar
+	            xa = 0; 
 	        }
-	    } else if (xa < 0) { // Moviéndose hacia la izquierda (X-)
+	    } else if (xa < 0) { 
 	        if (!world.isSolidAt(nextX - playerRadius, z - playerRadius) && 
 	            !world.isSolidAt(nextX - playerRadius, z + playerRadius)) {
 	            x = nextX;
@@ -98,16 +98,16 @@ public class Controller {
 	        }
 	    }
 
-	    // Evaluar y aplicar movimiento en el eje Z
+
 	    double nextZ = z + za;
-	    if (za > 0) { // Moviéndose hacia abajo/adelante en la rejilla (Z+)
+	    if (za > 0) { 
 	        if (!world.isSolidAt(x - playerRadius, nextZ + playerRadius) && 
 	            !world.isSolidAt(x + playerRadius, nextZ + playerRadius)) {
 	            z = nextZ;
 	        } else {
 	            za = 0;
 	        }
-	    } else if (za < 0) { // Moviéndose hacia arriba/atrás en la rejilla (Z-)
+	    } else if (za < 0) { 
 	        if (!world.isSolidAt(x - playerRadius, nextZ - playerRadius) && 
 	            !world.isSolidAt(x + playerRadius, nextZ - playerRadius)) {
 	            z = nextZ;

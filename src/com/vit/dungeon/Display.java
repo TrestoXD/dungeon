@@ -19,8 +19,7 @@ import com.vit.dungeon.input.Controller;
 import com.vit.dungeon.input.InputHandler;
 import com.vit.dungeon.input.MouseController;
 
-
-public class Display extends Canvas implements Runnable{
+public class Display extends Canvas implements Runnable {
 	private static final long serialVersionUID = 1L;
 	
 	public static final int WIDTH = 800;
@@ -43,6 +42,9 @@ public class Display extends Canvas implements Runnable{
 	
 	public static int MouseSpeed;
 	
+	
+	private final Font debugFont = new Font("Hack", Font.PLAIN, 16);
+	
 	public Display() {
 		Dimension size = new Dimension(WIDTH, HEIGHT);
 		setPreferredSize(size);
@@ -61,27 +63,13 @@ public class Display extends Canvas implements Runnable{
 		addMouseMotionListener(input);
 	}
 	
-	private void start() {
-		if(running) 
-			return;
+	private synchronized void start() {
+		if (running) return;
 		running = true;
-		thread = new Thread(this);
+		thread = new Thread(this, "GameThread");
 		thread.start();
-		
 		System.out.println("Working");
 	}
-	
-	/*private void stop() {
-		if(!running)
-			return;
-		running = false;
-		try {
-			thread.join();
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-	}*/
 	
 	public void run() {
 		int frames = 0;
@@ -89,95 +77,87 @@ public class Display extends Canvas implements Runnable{
 		long previousTime = System.nanoTime();
 		double secondsPerTick = 1 / 60.00;
 		int tickCount = 0;
-		boolean ticked = false;
-		while(running) {
+		
+		
+		requestFocus();
+		
+		while (running) {
 			long currentTime = System.nanoTime();
 			long passedTime = currentTime - previousTime;
 			previousTime = currentTime;
 			unprocessedSeconds += passedTime / 1000000000.0;
-			requestFocus();
 			
+			boolean ticked = false;
 			while (unprocessedSeconds > secondsPerTick) {
 				tick();
 				unprocessedSeconds -= secondsPerTick;
 				ticked = true;
 				tickCount++;
-				if(tickCount % 3 == 0) {
+				
+				if (tickCount % 3 == 0) {
 					x = (int) Controller.x / 16;
 					y = (int) Controller.y / 16;
 					z = (int) Controller.z / 16;
 				}
-				if(tickCount % 60 == 0) {
-					//System.out.println(frames + " FPS");
+				if (tickCount % 60 == 0) {
 					fps = frames;
-					previousTime += 1000;
 					frames = 0;
 				}
 			}
-			if(ticked) {
-				render();
-				frames++;
-			}
+			
+			// Renderizado único por vuelta si hubo un cambio lógico o para mantener fluidez
 			render();
 			frames++;
+			
 			if (input.key[java.awt.event.KeyEvent.VK_ESCAPE]) {
-                mouseController.unlock();
-            }
+				mouseController.unlock();
+			}
 
-            // Si el ratón está capturado, actualiza deltas y centra de forma automática
-            if (mouseController.isLocked()) {
-                mouseController.update();
-            } else {
-                // Si está desbloqueado, puedes mantener tu lectura clásica por teclado si quieres
-                Controller.turnLeft = input.key[java.awt.event.KeyEvent.VK_LEFT];
-                Controller.turnRight = input.key[java.awt.event.KeyEvent.VK_RIGHT];
-                MouseSpeed = 4; // Velocidad estándar de giro por teclado
-            }
-            /*
-			newY = InputHandler.MouseY;
-			int deltaY = newY - oldY;
-
-
-			double mouseSensitivity = 2; 
-			game.controls.ylooka -= deltaY * mouseSensitivity; 
-
-
-			oldY = newY;
-			*/
-			//System.out.println("X: " + InputHandler.MouseX + " Y: " + InputHandler.MouseY);
+			if (mouseController.isLocked()) {
+				mouseController.update();
+			} else {
+				Controller.turnLeft = input.key[java.awt.event.KeyEvent.VK_LEFT];
+				Controller.turnRight = input.key[java.awt.event.KeyEvent.VK_RIGHT];
+				MouseSpeed = 4;
+			}
 		}
 	}
 	
 	private void tick() {
 		game.tick(input.key);
 	}
+	
 	private void render() {
 		BufferStrategy bs = this.getBufferStrategy();
-		if(bs == null) {
-			createBufferStrategy(3);
+		if (bs == null) {
+			createBufferStrategy(3); // Triple buffering óptimo
 			return;
 		}
 		
-		for(int i = 0; i < WIDTH * HEIGHT; i++) {
-			pixels[i] = screen.pixels[i];
-		}
-		String Block_coordenates = ("Block: " + + x + " " + y + " " + z);
-		
+		// 1. PRIMERO calculamos el renderizado 3D en la pantalla interna
 		screen.render(game);
 		
+		// 2. DESPUÉS volcamos el array de píxeles procesados al búfer de la imagen
+		System.arraycopy(screen.pixels, 0, pixels, 0, pixels.length);
+		
+		// 3. Dibujamos los gráficos e interfaz
 		Graphics g = bs.getDrawGraphics();
 		g.drawImage(img, 0, 0, WIDTH, HEIGHT, null);
-		g.setFont(new Font("Hack",0,16));
+		
+		g.setFont(debugFont);
 		g.setColor(Color.CYAN);
 		g.drawString(fps + " FPS", 24, 32);
-		g.drawString("Block: " + + x + " " + y + " " + z, WIDTH - (Block_coordenates.length() * 10 + 24), 32);
+		
+		String blockCoordinates = "Block: " + x + " " + y + " " + z;
+		g.drawString(blockCoordinates, WIDTH - (blockCoordinates.length() * 10 + 24), 32);
+		
 		g.dispose();
 		bs.show();
 	}
 	
 	public static void main(String[] args) {
-		BufferedImage cursor = new BufferedImage(16,16,BufferedImage.TYPE_INT_ARGB);
-		Cursor blank = Toolkit.getDefaultToolkit().createCustomCursor(cursor, new Point(0,0), "blank");
+		BufferedImage cursor = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		Cursor blank = Toolkit.getDefaultToolkit().createCustomCursor(cursor, new Point(0, 0), "blank");
 		Display game = new Display();
 		JFrame frame = new JFrame();
 		frame.add(game);
@@ -198,8 +178,6 @@ public class Display extends Canvas implements Runnable{
 		});
 		
 		System.out.println("Running...");
-		
 		game.start();
-		
 	}
 }

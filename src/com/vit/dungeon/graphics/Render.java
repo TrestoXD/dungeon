@@ -12,25 +12,31 @@ public class Render {
 	}
 	
 	public void draw(Render render, int xOffs, int yOffs) {
-		for(int y = 0; y<render.height; y++) {
-			int yPix = y+ yOffs;
-			if(yPix < 0 || yPix >= height) {
-				continue;
-			}
+		
+		int startY = Math.max(0, -yOffs);
+		int endY = Math.min(render.height, height - yOffs);
+		
+		int startX = Math.max(0, -xOffs);
+		int endX = Math.min(render.width, width - xOffs);
+		
+		
+		if (startY >= endY || startX >= endX) {
+			return;
+		}
+		
+		
+		for (int y = startY; y < endY; y++) {
+			int yPix = y + yOffs;
+			int targetRowOffset = yPix * width;
+			int sourceRowOffset = y * render.width;
 			
-			for(int x = 0; x<render.width; x++) {
-				int xPix = x+ xOffs;
-				if(xPix < 0 || xPix >= width) {
-					continue;
+			for (int x = startX; x < endX; x++) {
+				int alpha = render.pixels[x + sourceRowOffset];
+				
+				
+				if (alpha > 0) {
+					pixels[(x + xOffs) + targetRowOffset] = alpha;
 				}
-				
-				int alpha = render.pixels[x+y * render.width];
-				
-				if(alpha > 0) {
-					pixels[xPix + yPix * width] = alpha;
-				}
-				
-				//pixels[xPix + yPix * width] = render.pixels[x + y * render.width];
 			}
 		}
 	}

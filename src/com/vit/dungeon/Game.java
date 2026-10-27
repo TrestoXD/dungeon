@@ -12,7 +12,7 @@ public class Game {
 	
 	public Game() {
 		controls = new Controller(); 
-		world = new World(8, 8);
+		world = new World(32,32);
 	}
 
 	public void tick(boolean[] key) {
