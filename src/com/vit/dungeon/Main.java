@@ -1,61 +1,45 @@
 package com.vit.dungeon;
 
-import org.lwjgl.Version;
-import org.lwjgl.glfw.*;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.system.MemoryStack;
+import com.vit.dungeon.engine.*;
+import com.vit.dungeon.engine.graph.Mesh;
+import com.vit.dungeon.engine.graph.Render;
+import com.vit.dungeon.engine.scene.Scene;
 
-import java.nio.IntBuffer;
+import com.vit.dungeon.engine.Engine;
+import com.vit.dungeon.engine.IAppLogic;
+import com.vit.dungeon.engine.Window;
 
-import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
-import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.system.MemoryStack.stackPush;
-import static org.lwjgl.system.MemoryUtil.NULL;
+public class Main implements IAppLogic {
 
-public class Main {
-	
-	private long window;
-	
-	public static void main(String[] args) {
-		new Main().run();
-	}
-	
-	public void run(){
-		System.out.println("Hello LWGL " + Version.getVersion());
-		
-		init();
-		loop();
-		
-		glfwFreeCallbacks(window);
-		glfwDestroyWindow(window);
-		
-		glfwTerminate();
-		glfwSetErrorCallback(null).free();
-	}
-	
-	private void init() {
-		GLFWErrorCallback.createPrint(System.err).set();
-		
-		if(!glfwInit()) {
-			throw new IllegalStateException("Unable to initialize GLFW");
-		}
-		
-		glfwDefaultWindowHints();
-		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-		
-		window = glfwCreateWindow(300,300, "DUNGEON - 0.0.1",NULL,NULL);
-		if(window == NULL) {
-			throw new RuntimeException("Failed to create the GLFW window");
-		}
-		
-		glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE)
-                glfwSetWindowShouldClose(window, true);
-        });
-	}
-	private void loop() {
-		
-	}
+    public static void main(String[] args) {
+        Main main = new Main();
+        Engine gameEng = new Engine("chapter-03", new Window.WindowOptions(), main);
+        gameEng.start();
+    }
+
+    @Override
+    public void cleanup() {
+        // Nothing to be done yet
+    }
+
+    @Override
+    public void init(Window window, Scene scene, Render render) {
+        float[] positions = new float[]{
+                0.0f, 0.5f, 0.0f,
+                -0.5f, -0.5f, 0.0f,
+                0.5f, -0.5f, 0.0f
+        };
+        Mesh mesh = new Mesh(positions, 3);
+        scene.addMesh("triangle", mesh);
+    }
+
+    @Override
+    public void input(Window window, Scene scene, long diffTimeMillis) {
+        // Nothing to be done yet
+    }
+
+    @Override
+    public void update(Window window, Scene scene, long diffTimeMillis) {
+        // Nothing to be done yet
+    }
 }
