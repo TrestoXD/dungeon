@@ -14,7 +14,7 @@ public class mapgeneration {
 	};
 	
 	public void drawMap3D() {
-		int x,y,xo,yo;
+		int x,y;
 		for(y=0 ; y < mapY; y++) {
 			for(x=0; x < mapX; x++) {
 				

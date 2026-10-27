@@ -3,7 +3,6 @@ package com.vit.dungeon.graphics;
 import java.util.Random;
 
 import com.vit.dungeon.Game;
-import com.vit.dungeon.world.World;
 
 public class Screen extends Render{
 	private Render test;

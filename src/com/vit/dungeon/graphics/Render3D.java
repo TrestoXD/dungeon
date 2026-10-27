@@ -29,15 +29,15 @@ public class Render3D extends Render {
 		
 		double floorPosition = 8;
 		double ceilingPosition = 40;
-		forward = game.controls.z;
-		right = game.controls.x;
-		up = game.controls.y;
+		forward = Controller.z;
+		right = Controller.x;
+		up = Controller.y;
 		walking = 0;
 		
 		up += 16;
 
 	    //yLook = game.controls.ylook;
-		double rotation = game.controls.rotation;
+		double rotation = Controller.rotation;
 		cosine = Math.cos(rotation);
 		sine = Math.sin(rotation);
 

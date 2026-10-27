@@ -14,7 +14,6 @@ import java.awt.image.DataBufferInt;
 
 import javax.swing.JFrame;
 
-import com.vit.dungeon.graphics.Render;
 import com.vit.dungeon.graphics.Screen;
 import com.vit.dungeon.input.Controller;
 import com.vit.dungeon.input.InputHandler;
@@ -36,10 +35,6 @@ public class Display extends Canvas implements Runnable{
 	private int[] pixels;
 	private InputHandler input;
 	private MouseController mouseController;
-	private int oldX = 0;
-	private int oldY = 0;
-	private int newX = 0;
-	private int newY = 0;
 	
 	private int fps;
 	private int x;
@@ -76,7 +71,7 @@ public class Display extends Canvas implements Runnable{
 		System.out.println("Working");
 	}
 	
-	private void stop() {
+	/*private void stop() {
 		if(!running)
 			return;
 		running = false;
@@ -86,7 +81,7 @@ public class Display extends Canvas implements Runnable{
 			e.printStackTrace();
 			System.exit(0);
 		}
-	}
+	}*/
 	
 	public void run() {
 		int frames = 0;
