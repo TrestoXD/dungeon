@@ -40,6 +40,9 @@ public class Display extends Canvas implements Runnable {
 	private int y;
 	private int z;
 	
+	boolean debugmode = false;
+	String blocksDebug = "";
+	
 	public static int MouseSpeed;
 	
 	
@@ -98,6 +101,8 @@ public class Display extends Canvas implements Runnable {
 					x = (int) Controller.x / 16;
 					y = (int) Controller.y / 16;
 					z = (int) Controller.z / 16;
+					
+					blocksDebug = ("Block: " + x + " " + y + " " + z);
 				}
 				if (tickCount % 60 == 0) {
 					fps = frames;
@@ -111,6 +116,12 @@ public class Display extends Canvas implements Runnable {
 			
 			if (input.key[java.awt.event.KeyEvent.VK_ESCAPE]) {
 				mouseController.unlock();
+			}
+			if(input.key[java.awt.event.KeyEvent.VK_WINDOWS]) {
+				mouseController.unlock();
+			}
+			if(input.key[java.awt.event.KeyEvent.VK_F3]) {
+				debugmode = !debugmode;
 			}
 
 			if (mouseController.isLocked()) {
@@ -146,10 +157,13 @@ public class Display extends Canvas implements Runnable {
 		
 		g.setFont(debugFont);
 		g.setColor(Color.CYAN);
+		
+		if(debugmode) {
 		g.drawString(fps + " FPS", 24, 32);
 		
-		String blockCoordinates = "Block: " + x + " " + y + " " + z;
-		g.drawString(blockCoordinates, WIDTH - (blockCoordinates.length() * 10 + 24), 32);
+		g.drawString(blocksDebug, WIDTH - (blocksDebug.length() * 10), 32);	
+		}
+		
 		
 		g.dispose();
 		bs.show();
