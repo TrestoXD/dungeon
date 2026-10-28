@@ -9,7 +9,7 @@ public class Render3D extends Render {
 
 	public double[] zBuffer;
 	public double[] zBufferWall;
-	private double renderdistance = 5000;
+	private double renderdistance = 3000;
 	private int spriteSheetWidth = 16;
 	private double forward, right, up, cosine, sine, walking, yLook;
 
