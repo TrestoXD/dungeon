@@ -122,6 +122,10 @@ public class Render3D extends Render {
 		}
 	}
 
+	public void spriteRender() {
+		
+	}
+	
 	public void renderWall(double xLeft, double xRight, double zDistanceLeft, double zDistanceRight, double yHeight) {
 		double xcLeft = (xLeft - (right / 16)) * 2;
 		double zcLeft = (zDistanceLeft - (forward / 16)) * 2;
