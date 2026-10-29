@@ -13,5 +13,5 @@
 </pre>
 
 
-<img width="auto" height="auto" alt="DUNGEON-0 0 2" src="https://github.com/user-attachments/assets/5aae6ca6-3895-4982-a9f8-a5a3880eb44f" />
+<img width="1024" height="768" alt="DUNGEON-0 0 2" src="https://github.com/user-attachments/assets/5aae6ca6-3895-4982-a9f8-a5a3880eb44f" />
 
