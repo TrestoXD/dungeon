@@ -11,6 +11,8 @@ use ratatui::{
 };
 use std::io::stdout;
 
+mod game;
+
 #[derive(PartialEq, Clone, Copy)]
 enum MenuOption {
     Play,
@@ -97,7 +99,13 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                         std::thread::sleep(std::time::Duration::from_millis(80));
 
                         if current_selection == MenuOption::Exit { break; }
-                        break;
+                        else{
+                            let _ = stdout().execute(event::DisableMouseCapture);
+                            ratatui::restore();
+
+                            game::run_game()?;
+                            return Ok(());
+                        }
                     }
                     _ => {}
                 },
@@ -115,7 +123,11 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                         if mouse_event.kind == MouseEventKind::Down(MouseButton::Left) {
                             let _ = terminal.draw(|f| render_button(f, play_area, " PLAY ", true, true));
                             std::thread::sleep(std::time::Duration::from_millis(80));
-                            break;
+                            let _ = stdout().execute(event::DisableMouseCapture);
+                            ratatui::restore();
+
+                            game::run_game()?;
+                            return Ok(());
                         }
                     } else if inside_exit {
                         current_selection = MenuOption::Exit;
