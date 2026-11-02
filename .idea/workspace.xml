@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="ALL" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml">
+      <package file="$PROJECT_DIR$">
+        <feature name="default" enabled="true" />
+      </package>
+    </cargoProject>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="15edeb60-e170-49d6-9837-17bb74c48ad9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.classpath" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.project" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.settings/org.eclipse.core.resources.prefs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/Display.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/Game.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/Main.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/graphics/Render.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/graphics/Render3D.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/graphics/Screen.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/graphics/Texture.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/graphics/mapgeneration.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/input/Controller.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/input/InputHandler.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/world/Block.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/world/NonSolidWall.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/world/SolidBlock.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/com/vit/dungeon/world/World.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/Grass_Block.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/cobblestone.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/items/apple.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/items/iron_sword.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/items/quiver.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/items/ruby.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/mossy_cobblestone.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/planks.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/smooth_stone.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/stone.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/textures/water.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/Display.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/Game.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Lighting.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Render.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Render3D.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Screen.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Sprite.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/Texture.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/graphics/mapgeneration.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/input/Controller.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/input/InputHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/input/MouseController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/world/Block.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/world/NonSolidWall.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/world/SolidBlock.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/vit/dungeon/world/World.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="RsBuildProfile:dev" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="oMoNtv3d" />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0000000002038076" />
+      <entry key="S30" value="1.0026663342360624" />
+      <entry key="S60" value="1.20490109928709" />
+      <entry key="M2" value="3.0938638092071775" />
+      <entry key="M5" value="15.030461057456316" />
+      <entry key="M10" value="52.59549640882159" />
+      <entry key="M15" value="101.27929411664681" />
+      <entry key="M30" value="246.07567464997393" />
+      <entry key="H1" value="453.8158595472569" />
+      <entry key="H2" value="667.8868951272722" />
+      <entry key="H4" value="833.6008853178163" />
+      <entry key="D1" value="1019.9020566657264" />
+      <entry key="W1" value="1057.5412950055595" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="1.009421288686146E-194" />
+      <entry key="S2" value="4.359196537854442E-49" />
+      <entry key="S5" value="8.036750067090204E-20" />
+      <entry key="S10" value="5.429405014631879E-10" />
+      <entry key="S30" value="0.0022674961932618817" />
+      <entry key="S60" value="0.10571003512220699" />
+      <entry key="M2" value="0.7317063927261228" />
+      <entry key="M5" value="2.917425850196833" />
+      <entry key="M10" value="7.183192228746318" />
+      <entry key="M15" value="11.880072908459878" />
+      <entry key="M30" value="26.372821033045778" />
+      <entry key="H1" value="51.91767182659668" />
+      <entry key="H2" value="83.48537525831611" />
+      <entry key="H4" value="110.56839645132125" />
+      <entry key="D1" value="143.0511971047518" />
+      <entry key="W1" value="149.83017494598883" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="4.722793559394502E-5" />
+      <entry key="MS500" value="0.13640798463186687" />
+      <entry key="S2" value="0.6077289822738753" />
+      <entry key="S5" value="0.819377396487943" />
+      <entry key="S10" value="0.9051946739702734" />
+      <entry key="S30" value="0.9722325976279238" />
+      <entry key="S60" value="1.292978009614714" />
+      <entry key="M2" value="3.8124556161462704" />
+      <entry key="M5" value="17.93339112327535" />
+      <entry key="M10" value="59.75677360107649" />
+      <entry key="M15" value="113.1319369480243" />
+      <entry key="M30" value="272.41450955707893" />
+      <entry key="H1" value="505.69919997277833" />
+      <entry key="H2" value="751.3444696001882" />
+      <entry key="H4" value="944.1508034078932" />
+      <entry key="D1" value="1162.9492546406386" />
+      <entry key="W1" value="1207.370871156927" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3LYMszTDB4Qu78bUVhi5CD6dYWn" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run dungeon.executor": "Run",
+    "CidrDebugProfileConversion": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "Rusted",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Trest/Documents/_Desarollo y Codigo/01 - Proyectos Activos/05 - Dungeon/dungeon",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true"
+  }
+}]]></component>
+  <component name="RunManager" selected="Cargo.Run dungeon">
+    <configuration name="Run dungeon" type="CargoCommandRunConfiguration" factoryName="Cargo Command" focusToolWindowBeforeRun="true">
+      <option name="buildProfileId" value="dev" />
+      <option name="command" value="run --package dungeon --bin dungeon" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Test dungeon" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
+      <option name="command" value="test --workspace" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <envs />
+      <option name="emulateTerminal" value="true" />
+      <option name="channel" value="DEFAULT" />
+      <option name="requiredFeatures" value="true" />
+      <option name="allFeatures" value="false" />
+      <option name="withSudo" value="false" />
+      <option name="buildTarget" value="REMOTE" />
+      <option name="backtrace" value="SHORT" />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="15edeb60-e170-49d6-9837-17bb74c48ad9" name="Changes" comment="" />
+      <created>1793626760377</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1793626760377</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
