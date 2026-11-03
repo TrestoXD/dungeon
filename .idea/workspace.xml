@@ -12,10 +12,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="15edeb60-e170-49d6-9837-17bb74c48ad9" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/assets/cobblestone.rgb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/stone.rgb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/font.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/game.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/lighting.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/player.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/render.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/rng.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/texture.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/display/world.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/game.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/game.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/display.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -39,61 +47,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0" />
-      <entry key="S2" value="1.0002909226381587" />
-      <entry key="S5" value="1.1211664452967296" />
-      <entry key="S10" value="2.0098239030196385" />
-      <entry key="S30" value="8.331037148163478" />
-      <entry key="S60" value="24.301416695460617" />
-      <entry key="M2" value="54.607834213572055" />
-      <entry key="M5" value="120.35877323307923" />
-      <entry key="M10" value="218.47938579983602" />
-      <entry key="M15" value="301.22527091248793" />
-      <entry key="M30" value="497.43288715233916" />
-      <entry key="H1" value="765.7704268870835" />
-      <entry key="H2" value="1051.9281023104484" />
-      <entry key="H4" value="1282.2818676392887" />
-      <entry key="D1" value="1550.24537209977" />
-      <entry key="W1" value="1605.4850983457413" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="4.222402122644272E-217" />
+      <entry key="S2" value="1.2233397455081032E-54" />
+      <entry key="S5" value="4.152702401706126E-22" />
+      <entry key="S10" value="3.637436260881738E-11" />
+      <entry key="S30" value="0.002446154699435207" />
+      <entry key="S60" value="0.3409701489970555" />
+      <entry key="M2" value="4.347870235413358" />
+      <entry key="M5" value="21.150604024911996" />
+      <entry key="M10" value="39.961359589612776" />
+      <entry key="M15" value="60.98724668324901" />
+      <entry key="M30" value="167.53837989734814" />
+      <entry key="H1" value="425.26234960844636" />
+      <entry key="H2" value="792.25105125331" />
+      <entry key="H4" value="1137.1300121526283" />
+      <entry key="D1" value="1582.903308989391" />
+      <entry key="W1" value="1680.0885376746282" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="3.9040147084843776E-237" />
-      <entry key="S2" value="7.904562929657778E-60" />
-      <entry key="S5" value="2.2863943838047197E-24" />
-      <entry key="S10" value="1.5121122513147244E-12" />
-      <entry key="S30" value="1.2146314860851739E-4" />
-      <entry key="S60" value="0.017616547729295464" />
-      <entry key="M2" value="0.3461222264633865" />
-      <entry key="M5" value="2.5629188562021574" />
-      <entry key="M10" value="5.909172116832448" />
-      <entry key="M15" value="9.268205032479623" />
-      <entry key="M30" value="21.054020028134236" />
-      <entry key="H1" value="45.56324511845883" />
-      <entry key="H2" value="79.91933077529227" />
-      <entry key="H4" value="111.92712829655919" />
-      <entry key="D1" value="152.68843088650962" />
-      <entry key="W1" value="161.4747734359972" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0000000000006284" />
+      <entry key="S30" value="1.00019082186964" />
+      <entry key="S60" value="1.026735007385622" />
+      <entry key="M2" value="1.323646529174429" />
+      <entry key="M5" value="2.45925941402584" />
+      <entry key="M10" value="3.4740257712731695" />
+      <entry key="M15" value="4.288535643755008" />
+      <entry key="M30" value="8.924643290244974" />
+      <entry key="H1" value="25.84541490856609" />
+      <entry key="H2" value="59.30901182363791" />
+      <entry key="H4" value="97.32343826896069" />
+      <entry key="D1" value="152.87442000793777" />
+      <entry key="W1" value="165.73763101329422" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.012779719664965326" />
-      <entry key="MS500" value="0.4181231999570315" />
-      <entry key="S2" value="0.8044115917166765" />
-      <entry key="S5" value="1.0362265728083495" />
-      <entry key="S10" value="1.9617568641736556" />
-      <entry key="S30" value="8.309158351324761" />
-      <entry key="S60" value="24.304632220910946" />
-      <entry key="M2" value="54.93885351015076" />
-      <entry key="M5" value="122.89661107499927" />
-      <entry key="M10" value="224.36121327405183" />
-      <entry key="M15" value="310.4655790223756" />
-      <entry key="M30" value="518.456344760653" />
-      <entry key="H1" value="811.3016038342139" />
-      <entry key="H2" value="1131.8197628003793" />
-      <entry key="H4" value="1394.1897382034367" />
-      <entry key="D1" value="1702.929439074735" />
-      <entry key="W1" value="1766.9592127458138" />
+      <entry key="MS100" value="1.928811796541449E-4" />
+      <entry key="MS500" value="0.18074153681821842" />
+      <entry key="S2" value="0.6520253676292801" />
+      <entry key="S5" value="0.8427636532553856" />
+      <entry key="S10" value="0.9180215974140851" />
+      <entry key="S30" value="0.9744872233437931" />
+      <entry key="S60" value="1.3514424957355136" />
+      <entry key="M2" value="5.6531351430601875" />
+      <entry key="M5" value="23.587807162956107" />
+      <entry key="M10" value="43.417963792583464" />
+      <entry key="M15" value="65.26111635645387" />
+      <entry key="M30" value="176.44852507796153" />
+      <entry key="H1" value="451.0885324548072" />
+      <entry key="H2" value="851.5389247188031" />
+      <entry key="H4" value="1234.4363818942286" />
+      <entry key="D1" value="1735.7733028926252" />
+      <entry key="W1" value="1845.825484056131" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -134,6 +142,13 @@
     &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\_Desarollo y Codigo\01_GitHub\dungeon\src\display" />
+      <recent name="D:\_Desarollo y Codigo\01_GitHub\dungeon\src" />
+      <recent name="D:\_Desarollo y Codigo\01_GitHub\dungeon\assets" />
+    </key>
+  </component>
   <component name="RunManager" selected="Cargo.Run dungeon">
     <configuration name="Run dungeon" type="CargoCommandRunConfiguration" factoryName="Cargo Command" focusToolWindowBeforeRun="true">
       <option name="buildProfileId" value="dev" />

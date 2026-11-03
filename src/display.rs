@@ -1,11 +1,11 @@
-//mod font;
-//mod game;
-//mod lighting;
-//mod player;
-//mod render;
-//mod rng;
-//mod texture;
-//mod world;
+mod font;
+mod game;
+mod lighting;
+mod player;
+mod render;
+mod rng;
+mod texture;
+mod world;
 
 use std::num::NonZeroU32;
 use std::rc::Rc;
@@ -21,7 +21,7 @@ use winit::window::{CursorGrabMode, Window, WindowId};
 
 use game::Game;
 use player::Input;
-use render::{blit_scaled, Renderer, RENDER_HEIGHT, RENDER_WIDTH};
+use render::{RENDER_HEIGHT, RENDER_WIDTH, Renderer, blit_scaled};
 use rng::Rng;
 
 use color_eyre::eyre::Result;
@@ -351,10 +351,24 @@ fn bench(game: &mut Game, frames: u32) {
 
 
 pub fn run_game() -> Result<()> {
-    let seed = Rng::from_time().next_u64();
-    println!("Semilla: {seed}");
+    let args = parse_args();
+    let seed_rng = Rng::from_time().next_u64();
+    let seed = args.seed.unwrap_or(seed_rng);
+    println!("Seed: {seed}");
 
-    let game = Game::new(&mut Rng::new(seed));
+    let mut game = Game::new(&mut Rng::new(seed));
+    println!(
+        "Dungeon generated: {} open cells. Player at X={} Z={}",
+        game.world.open_cells(),
+        game.player.x,
+        game.player.z
+    );
+
+    if args.bench {
+        bench(&mut game, args.frames);
+        return Ok(());
+    }
+
     let event_loop = EventLoop::new()?;
     let mut app = App::new(game);
     event_loop.run_app(&mut app)?;

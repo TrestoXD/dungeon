@@ -1,17 +1,17 @@
 use color_eyre::eyre::{Ok, Result};
 use crossterm::{
-    event::{self, Event, KeyCode, MouseButton, MouseEventKind},
     ExecutableCommand,
+    event::{self, Event, KeyCode, MouseButton, MouseEventKind},
 };
 use ratatui::{
+    DefaultTerminal, Frame,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
-    DefaultTerminal, Frame,
 };
 use std::io::stdout;
 
-mod game;
+mod display;
 
 #[derive(PartialEq, Clone, Copy)]
 enum MenuOption {
@@ -104,7 +104,7 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                             let _ = stdout().execute(event::DisableMouseCapture);
                             ratatui::restore();
 
-                            game::run_game()?;
+                            display::run_game()?;
                             return Ok(());
                         }
                     }
@@ -127,7 +127,7 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                             let _ = stdout().execute(event::DisableMouseCapture);
                             ratatui::restore();
 
-                            game::run_game()?;
+                            display::run_game()?;
                             return Ok(());
                         }
                     } else if inside_exit {
