@@ -23,17 +23,17 @@ fn main() -> Result<()> {
     println!("Welcome to Dungeon, thanks for playing my game!");
     color_eyre::install()?;
 
-    // Habilitar el ratón
+    // Enable Mouse Capture
     stdout().execute(event::EnableMouseCapture)?;
 
     let mut terminal = ratatui::init();
 
-    // Fijamos el tamaño típico de una terminal clásica (80 columnas x 24 filas)
+    // Fix the classic terminal size (800x600)
     terminal.resize(Rect::new(0, 0, 80, 24))?;
 
     let result = run(terminal);
 
-    // Restaurar al salir
+    // Restore when exit
     stdout().execute(event::DisableMouseCapture)?;
     ratatui::restore();
     result
@@ -46,7 +46,7 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
         // Get real window size
         let size = terminal.size()?;
 
-        // button config (CORRECCIÓN: Quitamos el mut redundante)
+        // Button config
         let button_width = 20;
         let button_height = 3;
         let button_x = (size.width.saturating_sub(button_width)) / 2;
@@ -55,19 +55,19 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
         let play_area = Rect::new(button_x, center_y + 1, button_width, button_height);
         let exit_area = Rect::new(button_x, center_y + 6, button_width, button_height);
 
-        // TITLE title config (CORRECCIÓN: Quitamos el mut redundante)
+        // Title config
         let title_area = Rect::new(0, 2, size.width, 12);
 
-        // Rendering pasándole el área calculada
+        // Rendering with calculated area
         terminal.draw(|frame| {
             render(frame);
             render_title(frame, title_area);
 
-            // Render de PLAY (CORRECCIÓN: Pasamos los estados dinámicos limpios)
+            // Render de PLAY
             let play_focused = current_selection == MenuOption::Play;
             render_button(frame, play_area, " PLAY ", play_focused, false);
 
-            // Render de EXIT (CORRECCIÓN: Pasamos los estados dinámicos limpios)
+            // Render de EXIT
             let exit_focused = current_selection == MenuOption::Exit;
             render_button(frame, exit_area, " EXIT ", exit_focused, false);
         })?;
@@ -79,16 +79,17 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                 Event::Key(key) => match key.code {
                     KeyCode::Esc => break,
 
-                    // ARRIBA te lleva siempre a PLAY de forma fija
+                    // Up
                     KeyCode::Up => {
                         current_selection = MenuOption::Play;
                     }
 
-                    // ABAJO te lleva siempre a EXIT de forma fija
+                    // Down
                     KeyCode::Down => {
                         current_selection = MenuOption::Exit;
                     }
 
+                    // Enter
                     KeyCode::Enter => {
                         let _ = terminal.draw(|f| {
                             let p_active = current_selection == MenuOption::Play;
@@ -146,7 +147,7 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
 }
 
 fn render(frame: &mut Frame) {
-    // Set Background (CORRECCIÓN: Cambiado a Cyan para que combine con tus botones)
+    // Set Background
     let full_background = Block::default().style(Style::default().bg(Color::Blue));
     frame.render_widget(full_background, frame.area());
 }
@@ -163,6 +164,7 @@ fn render_title(frame: &mut Frame, area: Rect) {
                        ▀▀▀
     "#;
 
+    // We calculate the height and width based on the ascii_title variable
     let title_height = ascii_title.lines().filter(|l| !l.is_empty()).count() as u16;
     let title_width = ascii_title.lines().map(|l| l.chars().count()).max().unwrap_or(0) as u16;
 
@@ -179,6 +181,7 @@ fn render_title(frame: &mut Frame, area: Rect) {
 }
 
 fn render_button(frame: &mut Frame, area: Rect, label: &str, is_hovered: bool, is_pressed: bool) {
+    // Not pressed -> Render the shadow
     if !is_pressed {
         let shadow_area = Rect::new(
             area.x + 1,
@@ -206,10 +209,12 @@ fn render_button(frame: &mut Frame, area: Rect, label: &str, is_hovered: bool, i
         }
     };
 
+    // Create the button
     let button = Paragraph::new(label)
         .style(style)
         .alignment(Alignment::Center)
         .block(Block::default().borders(Borders::ALL));
 
+    // Render for me pawn!
     frame.render_widget(button, area);
 }

@@ -1,63 +1,362 @@
-use color_eyre::eyre::{Ok, Result};
-use std::sync::Arc;
-use winit::{
-    application::ApplicationHandler,
-    event::WindowEvent,
-    event_loop::{ControlFlow, EventLoop},
-    window::Window,
-};
+//mod font;
+//mod game;
+//mod lighting;
+//mod player;
+//mod render;
+//mod rng;
+//mod texture;
+//mod world;
 
-// Estructura mínima para guardar la ventana
-struct GameApp {
-    window: Option<Arc<Window>>,
+use std::num::NonZeroU32;
+use std::rc::Rc;
+use std::time::{Duration, Instant};
+
+use softbuffer::{Context, Surface};
+use winit::application::ApplicationHandler;
+use winit::dpi::PhysicalSize;
+use winit::event::{DeviceEvent, DeviceId, ElementState, MouseButton, WindowEvent};
+use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
+use winit::keyboard::{KeyCode, PhysicalKey};
+use winit::window::{CursorGrabMode, Window, WindowId};
+
+use game::Game;
+use player::Input;
+use render::{blit_scaled, Renderer, RENDER_HEIGHT, RENDER_WIDTH};
+use rng::Rng;
+
+use color_eyre::eyre::Result;
+
+const TITLE: &str = "Dungeon Pre-Alpha 0.0.2 (Rust)";
+const SCALE: u32 = 3;
+const WIN_W: u32 = RENDER_WIDTH as u32 * SCALE;
+const WIN_H: u32 = RENDER_HEIGHT as u32 * SCALE;
+
+const TICK_NANOS: u64 = 1_000_000_000 / 60;
+const TICK: Duration = Duration::from_nanos(TICK_NANOS);
+const MAX_LAG: Duration = Duration::from_nanos(TICK_NANOS * 5);
+
+const CYAN: u32 = 0x00_FF_FF;
+
+
+
+struct Gfx {
+    window: Rc<Window>,
+    _context: Context<Rc<Window>>,
+    surface: Surface<Rc<Window>, Rc<Window>>,
 }
 
-impl ApplicationHandler for GameApp {
-    // Se ejecuta al arrancar para crear la ventana física
-    fn resumed(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        if self.window.is_none() {
-            let window_attributes = Window::default_attributes()
-                .with_title("Dungeon")
-                .with_inner_size(winit::dpi::LogicalSize::new(800.0, 600.0));
+struct App {
+    gfx: Option<Gfx>,
+    game: Game,
+    renderer: Renderer,
+    input: Input,
 
-            if let std::result::Result::Ok(window) = event_loop.create_window(window_attributes) {
-                self.window = Some(Arc::new(window));
-            }
+    mouse_dx: f64,
+    mouse_dy: f64,
+    grabbed: bool,
+
+    debug: bool,
+    block_debug: String,
+    ticks: u64,
+    fps: u32,
+    frames: u32,
+    fps_timer: Instant,
+
+    previous: Instant,
+    lag: Duration,
+}
+
+impl App {
+    fn new(game: Game) -> Self {
+        let now = Instant::now();
+        App {
+            gfx: None,
+            game,
+            renderer: Renderer::new(RENDER_WIDTH, RENDER_HEIGHT),
+            input: Input::default(),
+            mouse_dx: 0.0,
+            mouse_dy: 0.0,
+            grabbed: false,
+            debug: false,
+            block_debug: String::new(),
+            ticks: 0,
+            fps: 0,
+            frames: 0,
+            fps_timer: now,
+            previous: now,
+            lag: Duration::ZERO,
         }
     }
 
-    // Manejador de eventos de la ventana (cerrar y teclado)
-    fn window_event(
-        &mut self,
-        event_loop: &winit::event_loop::ActiveEventLoop,
-        _window_id: winit::window::WindowId,
-        event: WindowEvent,
-    ) {
-        match event {
-            // Cerrar con la X
-            WindowEvent::CloseRequested => {
-                event_loop.exit();
-            }
-            // Cerrar con la tecla Escape
-            WindowEvent::KeyboardInput { event: key_event, .. } => {
-                if key_event.state.is_pressed() {
-                    if let winit::keyboard::Key::Named(winit::keyboard::NamedKey::Escape) = key_event.logical_key {
-                        event_loop.exit();
-                    }
-                }
-            }
+    fn grab_cursor(&mut self) {
+        if self.grabbed {
+            return;
+        }
+        let Some(gfx) = &self.gfx else { return };
+        let w = &gfx.window;
+        let ok = w
+            .set_cursor_grab(CursorGrabMode::Locked)
+            .or_else(|_| w.set_cursor_grab(CursorGrabMode::Confined))
+            .is_ok();
+        if ok {
+            w.set_cursor_visible(false);
+            self.grabbed = true;
+        }
+    }
+
+    fn release_cursor(&mut self) {
+        if !self.grabbed {
+            return;
+        }
+        self.grabbed = false;
+        if let Some(gfx) = &self.gfx {
+            let _ = gfx.window.set_cursor_grab(CursorGrabMode::None);
+            gfx.window.set_cursor_visible(true);
+        }
+        self.mouse_dx = 0.0;
+        self.mouse_dy = 0.0;
+    }
+
+    fn on_key(&mut self, key: PhysicalKey, state: ElementState, repeat: bool) {
+        let down = state == ElementState::Pressed;
+        let PhysicalKey::Code(code) = key else { return };
+        match code {
+            KeyCode::KeyW => self.input.forward = down,
+            KeyCode::KeyS => self.input.back = down,
+            KeyCode::KeyA => self.input.left = down,
+            KeyCode::KeyD => self.input.right = down,
+            KeyCode::Space => self.input.jump = down,
+            KeyCode::ShiftLeft | KeyCode::ShiftRight => self.input.crouch = down,
+            KeyCode::ControlLeft | KeyCode::ControlRight => self.input.sprint = down,
+            KeyCode::ArrowLeft => self.input.turn_left = down,
+            KeyCode::ArrowRight => self.input.turn_right = down,
+            KeyCode::Escape if down => self.release_cursor(),
+            KeyCode::F3 if down && !repeat => self.debug = !self.debug,
             _ => {}
         }
     }
+
+    fn sim_tick(&mut self) {
+        if self.grabbed {
+            self.game.player.look(self.mouse_dx, self.mouse_dy);
+        }
+        self.mouse_dx = 0.0;
+        self.mouse_dy = 0.0;
+
+        self.game.tick(&self.input);
+        self.ticks += 1;
+
+        if self.debug && self.ticks % 3 == 0 {
+            let p = &self.game.player;
+            self.block_debug = format!(
+                "BLOCK: {} {} {}",
+                (p.x as i32) / 16,
+                (p.y as i32) / 16,
+                (p.z as i32) / 16
+            );
+        }
+    }
+
+    fn redraw(&mut self) {
+        let Some(gfx) = self.gfx.as_mut() else { return };
+        let size = gfx.window.inner_size();
+        let (Some(w), Some(h)) = (NonZeroU32::new(size.width), NonZeroU32::new(size.height)) else {
+            return;
+        };
+
+        self.renderer.render(&self.game);
+
+        if gfx.surface.resize(w, h).is_err() {
+            return;
+        }
+        let Ok(mut buffer) = gfx.surface.buffer_mut() else { return };
+        let (dw, dh) = (size.width as usize, size.height as usize);
+        let scale = blit_scaled(
+            &self.renderer.pixels,
+            RENDER_WIDTH,
+            RENDER_HEIGHT,
+            &mut buffer[..],
+            dw,
+            dh,
+        );
+
+        if self.debug {
+            let margin = 8 * scale;
+            let fps_text = format!("{} FPS", self.fps);
+            font::draw_text(&mut buffer[..], dw, dh, margin, margin, scale, CYAN, &fps_text);
+            let tw = font::text_width(&self.block_debug, scale);
+            font::draw_text(
+                &mut buffer[..],
+                dw,
+                dh,
+                dw.saturating_sub(tw + margin),
+                margin,
+                scale,
+                CYAN,
+                &self.block_debug,
+            );
+        }
+        let _ = buffer.present();
+
+        self.frames += 1;
+        let now = Instant::now();
+        if now - self.fps_timer >= Duration::from_secs(1) {
+            self.fps = self.frames;
+            self.frames = 0;
+            self.fps_timer = now;
+        }
+    }
 }
 
-// Función que se invoca desde el main.rs al pulsar PLAY
+impl ApplicationHandler for App {
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if self.gfx.is_some() {
+            return;
+        }
+        let attrs = Window::default_attributes()
+            .with_title(TITLE)
+            .with_inner_size(PhysicalSize::new(WIN_W, WIN_H));
+        let window = match event_loop.create_window(attrs) {
+            Ok(w) => Rc::new(w),
+            Err(e) => {
+                eprintln!("No se pudo crear la ventana: {e}");
+                event_loop.exit();
+                return;
+            }
+        };
+        let context = Context::new(window.clone()).expect("softbuffer: no se pudo crear el contexto");
+        let surface = Surface::new(&context, window.clone()).expect("softbuffer: no se pudo crear la superficie");
+        window.request_redraw();
+        self.gfx = Some(Gfx { window, _context: context, surface });
+        self.previous = Instant::now();
+        self.lag = Duration::ZERO;
+    }
+
+    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        match event {
+            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::Focused(false) => {
+                self.input = Input::default();
+                self.release_cursor();
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                self.on_key(event.physical_key, event.state, event.repeat);
+            }
+            WindowEvent::MouseInput { state: ElementState::Pressed, button: MouseButton::Left, .. } => {
+                self.grab_cursor();
+            }
+            WindowEvent::RedrawRequested => self.redraw(),
+            _ => {}
+        }
+    }
+
+    fn device_event(&mut self, _event_loop: &ActiveEventLoop, _id: DeviceId, event: DeviceEvent) {
+        if let DeviceEvent::MouseMotion { delta: (dx, dy) } = event {
+            if self.grabbed {
+                self.mouse_dx += dx;
+                self.mouse_dy += dy;
+            }
+        }
+    }
+
+    /// Timestep fijo a 60 ticks/s (igual que el Java): se renderiza solo si hubo tick.
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if self.gfx.is_none() {
+            return;
+        }
+        let now = Instant::now();
+        self.lag += now - self.previous;
+        self.previous = now;
+        if self.lag > MAX_LAG {
+            self.lag = MAX_LAG;
+        }
+
+        let mut ticked = false;
+        while self.lag >= TICK {
+            self.sim_tick();
+            self.lag -= TICK;
+            ticked = true;
+        }
+        if ticked {
+            if let Some(gfx) = &self.gfx {
+                gfx.window.request_redraw();
+            }
+        }
+        event_loop.set_control_flow(ControlFlow::WaitUntil(now + (TICK - self.lag)));
+    }
+}
+
+struct Args {
+    seed: Option<u64>,
+    bench: bool,
+    frames: u32,
+}
+
+const HELP: &str = "Dungeon (Rust)\n\
+Use: dungeon [--seed N] [--bench] [--frames N]\n\
+  --seed N     World Seed\n\
+  --bench      render without window and show ms/frame\n\
+  --frames N   Bench Frames\n\
+Controls: WASD move, Shift crouch, Ctrl run, Space jump,\n\
+click capture the window, Esc exit, ArrowKeys rotate, F3 debug.";
+
+fn parse_args() -> Args {
+    let mut a = Args { seed: None, bench: false, frames: 3000 };
+    let mut it = std::env::args().skip(1);
+    while let Some(arg) = it.next() {
+        match arg.as_str() {
+            "--bench" => a.bench = true,
+            "--seed" => a.seed = it.next().and_then(|s| s.parse().ok()),
+            "--frames" => {
+                if let Some(n) = it.next().and_then(|s| s.parse().ok()) {
+                    a.frames = n;
+                }
+            }
+            "-h" | "--help" => {
+                println!("{HELP}");
+                std::process::exit(0);
+            }
+            other => eprintln!("Argumento desconocido: {other}"),
+        }
+    }
+    a
+}
+
+fn bench(game: &mut Game, frames: u32) {
+    let mut renderer = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+    let mut input = Input::default();
+    input.turn_right = true;
+
+    // calentamiento
+    for _ in 0..200 {
+        game.tick(&input);
+        renderer.render(game);
+    }
+
+    let start = Instant::now();
+    for i in 0..frames {
+        input.forward = (i / 120) % 2 == 0;
+        game.tick(&input);
+        renderer.render(game);
+    }
+    let elapsed = start.elapsed();
+    std::hint::black_box(&renderer.pixels);
+
+    let ms = elapsed.as_secs_f64() * 1000.0 / frames as f64;
+    println!(
+        "{frames} frames en {elapsed:.2?} -> {ms:.3} ms/frame ({:.0} FPS, tick + render a {RENDER_WIDTH}x{RENDER_HEIGHT})",
+        1000.0 / ms
+    );
+}
+
+
 pub fn run_game() -> Result<()> {
+    let seed = Rng::from_time().next_u64();
+    println!("Semilla: {seed}");
+
+    let game = Game::new(&mut Rng::new(seed));
     let event_loop = EventLoop::new()?;
-    event_loop.set_control_flow(ControlFlow::Wait); // Modo eficiente para ventanas básicas
-
-    let mut app = GameApp { window: None };
+    let mut app = App::new(game);
     event_loop.run_app(&mut app)?;
-
     Ok(())
 }
