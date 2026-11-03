@@ -1,8 +1,9 @@
-//! Jugador y entrada. Sustituye a `Controller` (que era todo `static`) por un struct normal.
+// SUBSTITUTE OF CONTROLLER IN JAVA
 
 use crate::display::world::World;
 
 #[derive(Default, Clone, Copy)]
+/// All player Inputs
 pub struct Input {
     pub forward: bool,
     pub back: bool,
@@ -15,9 +16,9 @@ pub struct Input {
     pub turn_right: bool,
 }
 
-/// Giro por tick con las flechas (0.004 * 4 en el Java).
+/// Tick movement turn
 const KEY_TURN: f64 = 0.016;
-/// Radianes de impulso por unidad de movimiento de ratón.
+/// Impulse radiant for the mouse movement
 const MOUSE_TURN: f64 = 0.004;
 const MOUSE_PITCH: f64 = 2.0;
 const PLAYER_RADIUS: f64 = 2.5;
@@ -55,7 +56,7 @@ impl Player {
         }
     }
 
-    /// Movimiento de ratón acumulado desde el último tick.
+    /// Accumulated mouse movement through last tick.
     pub fn look(&mut self, dx: f64, dy: f64) {
         self.rotationa += MOUSE_TURN * dx;
         self.ylooka -= dy * MOUSE_PITCH;

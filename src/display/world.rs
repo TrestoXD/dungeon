@@ -6,31 +6,31 @@ use crate::display::rng::Rng;
 pub const AIR: u8 = 0;
 pub const SOLID: u8 = 1;
 
-/// Unidades de mundo por celda.
+/// Units of the world by cell
 pub const CELL: f64 = 16.0;
 
 pub struct World {
     pub width: usize,
     pub height: usize,
-    /// Cambia si el contenido del mundo cambia (hoy es estático). Lighting lo usa para invalidar.
+    /// Change the content if the world changes (NOW STATIC)
     pub version: u32,
-    /// Posición de aparición en unidades de mundo.
+    /// Position of Player Spawn in World units
     pub spawn: (f64, f64),
     cells: Vec<bool>,
-    /// (width+2) x (height+2) con un anillo de SOLID alrededor; se construye una sola vez.
+    /// (width+2) x (height+2) a SOLID ring around, builds only once.
     grid: Vec<u8>,
 }
 
 impl World {
+    /// Generate the World
     pub fn generate(width: usize, height: usize, rng: &mut Rng) -> World {
-        assert!(width >= 3 && height >= 3, "el mundo necesita al menos 3x3");
+        assert!(width >= 3 && height >= 3, "The world needs a minimum of 3x3");
         let idx = |x: usize, y: usize| x + y * width;
         let mut cells = vec![true; width * height];
 
         let (mut ex, mut ey) = (width / 2, height / 2);
         cells[idx(ex, ey)] = false;
 
-        // El Java podía colgarse en mundos pequeños; aquí se limita a lo que cabe.
         let capacity = (width - 2) * (height - 2) - 1;
         let target = (((width * height) as f64 * 0.40) as usize).min(capacity);
         let mut opened = 0;
@@ -57,7 +57,7 @@ impl World {
                 }
             }
         }
-
+        // perfect cell
         let spawn_cell = find_open(&cells, width, width / 2..width - 1, height / 2..height - 1)
             .or_else(|| find_open(&cells, width, 1..width - 1, 1..height - 1))
             .unwrap_or((width / 2, height / 2));
@@ -91,7 +91,7 @@ impl World {
         self.cells.iter().filter(|&&s| !s).count()
     }
 
-    /// Fuera del mapa cuenta como sólido.
+    /// Out of the map is Solid.
     pub fn is_solid_at(&self, x: f64, z: f64) -> bool {
         let bx = (x / CELL).floor() as i64;
         let bz = (z / CELL).floor() as i64;
@@ -102,6 +102,7 @@ impl World {
     }
 }
 
+// Find an open space for the player
 fn find_open(
     cells: &[bool],
     width: usize,
