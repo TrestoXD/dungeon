@@ -24,7 +24,9 @@ use player::Input;
 use render::{RENDER_HEIGHT, RENDER_WIDTH, Renderer, blit_scaled};
 use rng::Rng;
 
-use color_eyre::eyre::Result;
+use crate::settings::Settings;
+use color_eyre::Result;
+use winit::window::Fullscreen;
 
 const TITLE: &str = "Dungeon Pre-Alpha 0.0.2 (Rust)";
 const SCALE: u32 = 3;
@@ -48,6 +50,7 @@ struct Gfx {
 struct App {
     gfx: Option<Gfx>,
     game: Game,
+    settings: Settings,
     renderer: Renderer,
     input: Input,
 
@@ -67,11 +70,14 @@ struct App {
 }
 
 impl App {
-    fn new(game: Game) -> Self {
+    fn new(game: Game, settings: Settings) -> Self {
         let now = Instant::now();
+        let mut renderer = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+        renderer.fov = settings.fov as f32;
         App {
             gfx: None,
             game,
+            settings,
             renderer: Renderer::new(RENDER_WIDTH, RENDER_HEIGHT),
             input: Input::default(),
             mouse_dx: 0.0,
@@ -213,9 +219,11 @@ impl ApplicationHandler for App {
         if self.gfx.is_some() {
             return;
         }
-        let attrs = Window::default_attributes()
-            .with_title(TITLE)
+        let mut attrs = Window::default_attributes().with_title(TITLE)
             .with_inner_size(PhysicalSize::new(WIN_W, WIN_H));
+        if self.settings.fullscreen {
+            attrs = attrs.with_fullscreen(Some(Fullscreen::Borderless(None)));
+        }
         let window = match event_loop.create_window(attrs) {
             Ok(w) => Rc::new(w),
             Err(e) => {
@@ -286,91 +294,12 @@ impl ApplicationHandler for App {
     }
 }
 
-struct Args {
-    seed: Option<u64>,
-    bench: bool,
-    frames: u32,
-}
 
-const HELP: &str = "Dungeon (Rust)\n\
-Use: dungeon [--seed N] [--bench] [--frames N]\n\
-  --seed N     World Seed\n\
-  --bench      render without window and show ms/frame\n\
-  --frames N   Bench Frames\n\
-Controls: WASD move, Shift crouch, Ctrl run, Space jump,\n\
-click capture the window, Esc exit, ArrowKeys rotate, F3 debug.";
-
-fn parse_args() -> Args {
-    let mut a = Args { seed: None, bench: false, frames: 3000 };
-    let mut it = std::env::args().skip(1);
-    while let Some(arg) = it.next() {
-        match arg.as_str() {
-            "--bench" => a.bench = true,
-            "--seed" => a.seed = it.next().and_then(|s| s.parse().ok()),
-            "--frames" => {
-                if let Some(n) = it.next().and_then(|s| s.parse().ok()) {
-                    a.frames = n;
-                }
-            }
-            "-h" | "--help" => {
-                println!("{HELP}");
-                std::process::exit(0);
-            }
-            other => eprintln!("Argumento desconocido: {other}"),
-        }
-    }
-    a
-}
-
-fn bench(game: &mut Game, frames: u32) {
-    let mut renderer = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
-    let mut input = Input::default();
-    input.turn_right = true;
-
-    // calentamiento
-    for _ in 0..200 {
-        game.tick(&input);
-        renderer.render(game);
-    }
-
-    let start = Instant::now();
-    for i in 0..frames {
-        input.forward = (i / 120) % 2 == 0;
-        game.tick(&input);
-        renderer.render(game);
-    }
-    let elapsed = start.elapsed();
-    std::hint::black_box(&renderer.pixels);
-
-    let ms = elapsed.as_secs_f64() * 1000.0 / frames as f64;
-    println!(
-        "{frames} frames en {elapsed:.2?} -> {ms:.3} ms/frame ({:.0} FPS, tick + render a {RENDER_WIDTH}x{RENDER_HEIGHT})",
-        1000.0 / ms
-    );
-}
-
-
-pub fn run_game() -> Result<()> {
-    let args = parse_args();
-    let seed_rng = Rng::from_time().next_u64();
-    let seed = args.seed.unwrap_or(seed_rng);
-    println!("Seed: {seed}");
-
-    let mut game = Game::new(&mut Rng::new(seed));
-    println!(
-        "Dungeon generated: {} open cells. Player at X={} Z={}",
-        game.world.open_cells(),
-        game.player.x,
-        game.player.z
-    );
-
-    if args.bench {
-        bench(&mut game, args.frames);
-        return Ok(());
-    }
-
+pub fn run_game(settings: &Settings) -> Result<()> {
+    let seed = Rng::from_time().next_u64();
+    let game = Game::new(&mut Rng::new(seed));
     let event_loop = EventLoop::new()?;
-    let mut app = App::new(game);
+    let mut app = App::new(game, settings.clone());   // guarda las opciones en App
     event_loop.run_app(&mut app)?;
     Ok(())
 }

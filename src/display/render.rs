@@ -38,12 +38,14 @@ struct Camera {
     cam_y_correction: f32,
     half_w: f32,
     half_h: f32,
+    focal: f32,
 }
 
 pub struct Renderer {
     pub width: usize,
     pub height: usize,
     pub pixels: Vec<u32>,
+    pub fov: f32,
     lighting: Lighting,
     textures: Textures,
     z_buffer: Vec<f32>,
@@ -56,6 +58,7 @@ impl Renderer {
             width,
             height,
             pixels: vec![0; width * height],
+            fov: 70.0,
             lighting: Lighting::new(),
             textures: Textures::load(),
             z_buffer: vec![0.0; width],
@@ -82,6 +85,9 @@ impl Renderer {
         let cosine = p.rotation.cos() as f32;
         let sine = p.rotation.sin() as f32;
 
+        let half_w = self.width as f32 * 0.5;
+        let focal = half_w / (self.fov.to_radians() * 0.5).tan();
+
         let t = game.time as f64;
         let walking = if p.walk {
             if p.crouch_walk {
@@ -106,8 +112,9 @@ impl Renderer {
             cam_x: right / 16.0,
             cam_z: forward / 16.0,
             cam_y_correction: -(up + walking) / 16.0,
-            half_w: self.width as f32 * 0.5,
+            half_w,
             half_h: self.height as f32 * 0.5,
+            focal,
         };
     }
 
@@ -115,9 +122,9 @@ impl Renderer {
         let width = self.width;
         let height = self.height;
         let half_height = (height / 2) as i32;
-        let inv_height = 1.0 / height as f32;
         let half_width = width as f32 * 0.5;
         let cam = self.cam;
+        let inv_focal = 1.0 / cam.focal;
 
         let tex = &self.textures.block;
         let table = &tex.table[..];
@@ -130,7 +137,7 @@ impl Renderer {
         let outside = ((self.lighting.ambient_fix() >> LIGHT_SHIFT) << shift) as usize;
 
         for y in 0..height {
-            let mut c = ((y as i32 - half_height) as f32 - cam.y_look) * inv_height;
+            let mut c = ((y as i32 - half_height) as f32 - cam.y_look) * inv_focal;
             if c == 0.0 {
                 c = 0.0001;
             }
@@ -146,7 +153,7 @@ impl Renderer {
                 continue;
             }
 
-            let depth_base = z * inv_height;
+            let depth_base = z * inv_focal;
             let depth0 = -half_width * depth_base;
             let mut u = ((depth0 * cam.cosine + z * cam.sine + cam.right) * FIX_ONE) as i32;
             let mut v = ((z * cam.cosine - depth0 * cam.sine + cam.forward) * FIX_ONE) as i32;
@@ -244,8 +251,8 @@ impl Renderer {
             t_r = t;
         }
 
-        let xl = ((lx / lz * height_f + cam.half_w) * SNAP).floor() / SNAP;
-        let xr = ((rx / rz * height_f + cam.half_w) * SNAP).floor() / SNAP;
+        let xl = ((lx / lz * cam.focal + cam.half_w) * SNAP).floor() / SNAP;
+        let xr = ((rx / rz * cam.focal + cam.half_w) * SNAP).floor() / SNAP;
         if xl >= xr {
             return;
         }
@@ -263,10 +270,10 @@ impl Renderer {
         let inv_rz = 1.0 / rz;
         let y_look_off = cam.half_h + cam.y_look;
 
-        let tl_y = ((y_top_corner * inv_lz * height_f + y_look_off) * SNAP).floor() / SNAP;
-        let tr_y = ((y_top_corner * inv_rz * height_f + y_look_off) * SNAP).floor() / SNAP;
-        let bl_y = ((y_bot_corner * inv_lz * height_f + y_look_off) * SNAP).floor() / SNAP;
-        let br_y = ((y_bot_corner * inv_rz * height_f + y_look_off) * SNAP).floor() / SNAP;
+        let tl_y = ((y_top_corner * inv_lz * cam.focal + y_look_off) * SNAP).floor() / SNAP;
+        let tr_y = ((y_top_corner * inv_rz * cam.focal + y_look_off) * SNAP).floor() / SNAP;
+        let bl_y = ((y_bot_corner * inv_lz * cam.focal + y_look_off) * SNAP).floor() / SNAP;
+        let br_y = ((y_bot_corner * inv_rz * cam.focal + y_look_off) * SNAP).floor() / SNAP;
 
         let tex = &self.textures.stone;
         let table = &tex.table[..];
