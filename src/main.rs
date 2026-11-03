@@ -83,8 +83,8 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
             let config_focused = current_selection == MenuOption::Config;
             render_button(frame, config_area, " CONFIG ", config_focused, false);
 
-            render_config_content(frame, config_popup, config_selection);
             render_config(frame, config_popup, config_selection);
+            render_config_content(frame, config_popup, config_selection);
         })?;
 
         // Event Management
@@ -249,12 +249,11 @@ fn render_config_content(frame: &mut Frame, show_popup: bool, selected_tab: usiz
         2 => "And this too controller Settings!".bold(),
         _ => unreachable!(),
     };
+    let block = Paragraph::new(text)
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Center);
 
     if show_popup{
-        let block = Paragraph::new(text)
-            .style(Style::default().fg(Color::White))
-            .alignment(Alignment::Center)
-            .block(Block::bordered());
         frame.render_widget(block, centered_area);
     }
 }
