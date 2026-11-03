@@ -16,6 +16,7 @@ mod display;
 #[derive(PartialEq, Clone, Copy)]
 enum MenuOption {
     Play,
+    Config,
     Exit,
 }
 
@@ -53,7 +54,8 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
         let center_y = size.height.saturating_sub(button_height) / 2;
 
         let play_area = Rect::new(button_x, center_y + 1, button_width, button_height);
-        let exit_area = Rect::new(button_x, center_y + 6, button_width, button_height);
+        let config_area = Rect::new(button_x, center_y + 6, button_width, button_height);
+        let exit_area = Rect::new(button_x, center_y + 11, button_width, button_height);
 
         // Title config
         let title_area = Rect::new(0, 2, size.width, 12);
@@ -63,53 +65,72 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
             render(frame);
             render_title(frame, title_area);
 
-            // Render de PLAY
+            // Render PLAY
             let play_focused = current_selection == MenuOption::Play;
             render_button(frame, play_area, " PLAY ", play_focused, false);
 
-            // Render de EXIT
+            // Render EXIT
             let exit_focused = current_selection == MenuOption::Exit;
             render_button(frame, exit_area, " EXIT ", exit_focused, false);
+
+            // Render CONFIG
+            let config_focused = current_selection == MenuOption::Config;
+            render_button(frame, config_area, " CONFIG ", config_focused, false);
         })?;
 
         // Event Management
         if event::poll(std::time::Duration::from_millis(16))? {
             match event::read()? {
                 // Keyboard
-                Event::Key(key) => match key.code {
-                    KeyCode::Esc => break,
+                Event::Key(key) => {
+                    if key.kind == crossterm::event::KeyEventKind::Press{
+                        match key.code {
+                            KeyCode::Esc => break,
 
-                    // Up
-                    KeyCode::Up => {
-                        current_selection = MenuOption::Play;
-                    }
+                            // Up navigation
+                            KeyCode::Up => {
+                                current_selection = match current_selection {
+                                    MenuOption::Play => MenuOption::Exit,
+                                    MenuOption::Config => MenuOption::Play,
+                                    MenuOption::Exit => MenuOption::Config,
+                                };
+                            }
 
-                    // Down
-                    KeyCode::Down => {
-                        current_selection = MenuOption::Exit;
-                    }
+                            // Down navigation
+                            KeyCode::Down => {
+                                current_selection = match current_selection {
+                                    MenuOption::Play => MenuOption::Config,
+                                    MenuOption::Config => MenuOption::Exit,
+                                    MenuOption::Exit => MenuOption::Play,
+                                };
+                            }
 
-                    // Enter
-                    KeyCode::Enter => {
-                        let _ = terminal.draw(|f| {
-                            let p_active = current_selection == MenuOption::Play;
-                            let e_active = current_selection == MenuOption::Exit;
-                            render_button(f, play_area, " PLAY ", p_active, p_active);
-                            render_button(f, exit_area, " EXIT ", e_active, e_active);
-                        });
-                        std::thread::sleep(std::time::Duration::from_millis(80));
+                            // Enter
+                            KeyCode::Enter => {
+                                let _ = terminal.draw(|f| {
+                                    let p_active = current_selection == MenuOption::Play;
+                                    let e_active = current_selection == MenuOption::Exit;
+                                    let c_active = current_selection == MenuOption::Config;
+                                    render_button(f, play_area, " PLAY ", p_active, p_active);
+                                    render_button(f, exit_area, " EXIT ", e_active, e_active);
+                                    render_button(f, config_area, " CONFIG ", c_active, c_active);
+                                });
+                                std::thread::sleep(std::time::Duration::from_millis(80));
 
-                        if current_selection == MenuOption::Exit { break; }
-                        else{
-                            let _ = stdout().execute(event::DisableMouseCapture);
-                            ratatui::restore();
+                                if current_selection == MenuOption::Exit {
+                                    break;
+                                } else {
+                                    let _ = stdout().execute(event::DisableMouseCapture);
+                                    ratatui::restore();
 
-                            display::run_game()?;
-                            return Ok(());
+                                    display::run_game()?;
+                                    return Ok(());
+                                }
+                            }
+                            _ => {}
                         }
                     }
-                    _ => {}
-                },
+                }
 
                 // Mouse
                 Event::Mouse(mouse_event) => {
