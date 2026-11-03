@@ -36,61 +36,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.666034707462171" />
-      <entry key="MS500" value="4.321131859626465" />
-      <entry key="S2" value="8.289338433754565" />
-      <entry key="S5" value="11.446591938173393" />
-      <entry key="S10" value="15.430342376547877" />
-      <entry key="S30" value="22.029110438567862" />
-      <entry key="S60" value="24.889977113090445" />
-      <entry key="M2" value="28.830433220821888" />
-      <entry key="M5" value="45.49884222972895" />
-      <entry key="M10" value="68.3380851048385" />
-      <entry key="M15" value="90.39191416677353" />
-      <entry key="M30" value="182.40463328298972" />
-      <entry key="H1" value="418.1656511971867" />
-      <entry key="H2" value="840.216428764314" />
-      <entry key="H4" value="1324.276641073112" />
-      <entry key="D1" value="2058.4188571685695" />
-      <entry key="W1" value="2233.099744396271" />
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0" />
+      <entry key="S10" value="1.0000000000655325" />
+      <entry key="S30" value="1.0043905284818189" />
+      <entry key="S60" value="1.6629685705781685" />
+      <entry key="M2" value="9.954496943069213" />
+      <entry key="M5" value="51.72057140055319" />
+      <entry key="M10" value="118.40715480846815" />
+      <entry key="M15" value="179.09220023113335" />
+      <entry key="M30" value="331.0289227321721" />
+      <entry key="H1" value="594.6307160186116" />
+      <entry key="H2" value="1047.891426886192" />
+      <entry key="H4" value="1604.845225865801" />
+      <entry key="D1" value="2519.3338013312605" />
+      <entry key="W1" value="2747.302854040204" />
     </decayedCancelled>
     <decayedSelected>
       <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="1.4926897166804945E-194" />
-      <entry key="S2" value="4.661525893777714E-49" />
-      <entry key="S5" value="8.135526739918693E-20" />
-      <entry key="S10" value="4.854153026710235E-10" />
-      <entry key="S30" value="0.001633955118114212" />
-      <entry key="S60" value="0.07767708187632842" />
-      <entry key="M2" value="0.791516365779528" />
-      <entry key="M5" value="4.842852906532178" />
-      <entry key="M10" value="9.655434519822593" />
-      <entry key="M15" value="12.298045574095635" />
-      <entry key="M30" value="16.52422145957083" />
-      <entry key="H1" value="25.877527654196207" />
-      <entry key="H2" value="52.221399898224625" />
-      <entry key="H4" value="92.45086449672823" />
-      <entry key="D1" value="165.6374736646104" />
-      <entry key="W1" value="184.59524441351564" />
+      <entry key="MS500" value="2.4368856373900417E-69" />
+      <entry key="S2" value="7.026010380096273E-18" />
+      <entry key="S5" value="1.3762062150782988E-7" />
+      <entry key="S10" value="3.70972661784929E-4" />
+      <entry key="S30" value="0.07304855555789001" />
+      <entry key="S60" value="0.35105960732205366" />
+      <entry key="M2" value="1.3447814076815314" />
+      <entry key="M5" value="5.135825003718715" />
+      <entry key="M10" value="10.500197152034083" />
+      <entry key="M15" value="14.940134384867063" />
+      <entry key="M30" value="25.0755696273672" />
+      <entry key="H1" value="39.44591631615115" />
+      <entry key="H2" value="67.20277088349229" />
+      <entry key="H4" value="110.1269748587033" />
+      <entry key="D1" value="194.75805365385756" />
+      <entry key="W1" value="217.81612356935165" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="1.4916863717953883" />
-      <entry key="MS500" value="4.223834736729861" />
-      <entry key="S2" value="8.242677902966097" />
-      <entry key="S5" value="11.420879105737885" />
-      <entry key="S10" value="15.41301606565006" />
-      <entry key="S30" value="22.02240079407977" />
-      <entry key="S60" value="24.960487189360865" />
-      <entry key="M2" value="29.60572438700097" />
-      <entry key="M5" value="50.307944300802205" />
-      <entry key="M10" value="77.96093154130442" />
-      <entry key="M15" value="102.6624125390516" />
-      <entry key="M30" value="198.90979574368646" />
-      <entry key="H1" value="444.02690753386463" />
-      <entry key="H2" value="892.4203965928637" />
-      <entry key="H4" value="1416.7118046418536" />
-      <entry key="D1" value="2224.0516102913257" />
-      <entry key="W1" value="2417.694236754039" />
+      <entry key="MS100" value="1.1232759407041924E-4" />
+      <entry key="MS500" value="0.1622173458673979" />
+      <entry key="S2" value="0.6346354430099024" />
+      <entry key="S5" value="0.8336999805850144" />
+      <entry key="S10" value="0.9134173368730968" />
+      <entry key="S30" value="1.0458382031295363" />
+      <entry key="S60" value="1.9930359509048379" />
+      <entry key="M2" value="11.273643894012208" />
+      <entry key="M5" value="56.81723489564667" />
+      <entry key="M10" value="128.863692976129" />
+      <entry key="M15" value="193.9891021199753" />
+      <entry key="M30" value="356.0668830307451" />
+      <entry key="H1" value="634.0468533482598" />
+      <entry key="H2" value="1115.0692487609276" />
+      <entry key="H4" value="1714.9521724014655" />
+      <entry key="D1" value="2714.0860661450106" />
+      <entry key="W1" value="2965.118055632919" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -105,32 +105,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Run dungeon.executor&quot;: &quot;Run&quot;,
-    &quot;CidrDebugProfileConversion&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.rust.reset.selective.auto.import&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Rusted&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Trest/Documents/_Desarollo y Codigo/01 - Proyectos Activos/05 - Dungeon/dungeon&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.jshint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon&quot;: &quot;&quot;,
-    &quot;org.rust.first.attach.projects&quot;: &quot;true&quot;,
-    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run dungeon.executor": "Debug",
+    "CidrDebugProfileConversion": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "Rusted",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/Trest/Documents/_Desarollo y Codigo/01 - Proyectos Activos/05 - Dungeon/dungeon",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "org.rust.first.attach.projects": "true",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\_Desarollo y Codigo\01_GitHub\dungeon\src\display" />

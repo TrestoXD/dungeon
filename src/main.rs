@@ -3,13 +3,12 @@ use crossterm::{
     ExecutableCommand,
     event::{self, Event, KeyCode, MouseButton, MouseEventKind},
 };
-use ratatui::{
-    DefaultTerminal, Frame,
-    layout::{Alignment, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
-};
+use ratatui::{layout::{Alignment, Rect}, style::{Color, Modifier, Style}, symbols, widgets::{Block, Borders, Paragraph}, DefaultTerminal, Frame};
 use std::io::stdout;
+use ratatui::layout::{Constraint, Layout};
+use ratatui::style::Stylize;
+use ratatui::text::Line;
+use ratatui::widgets::{Clear, Tabs};
 
 mod display;
 
@@ -41,7 +40,14 @@ fn main() -> Result<()> {
 }
 
 fn run(mut terminal: DefaultTerminal) -> Result<()> {
+    // Default Selection when opening the program
     let mut current_selection = MenuOption::Play;
+    let mut buttons_enabled = true;
+    // Config
+    // is config popup enabled?
+    let mut config_popup = false;
+    // config selection
+    let mut config_selection = 0;
 
     loop {
         // Get real window size
@@ -76,6 +82,9 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
             // Render CONFIG
             let config_focused = current_selection == MenuOption::Config;
             render_button(frame, config_area, " CONFIG ", config_focused, false);
+
+            render_config_content(frame, config_popup, config_selection);
+            render_config(frame, config_popup, config_selection);
         })?;
 
         // Event Management
@@ -87,44 +96,72 @@ fn run(mut terminal: DefaultTerminal) -> Result<()> {
                         match key.code {
                             KeyCode::Esc => break,
 
-                            // Up navigation
-                            KeyCode::Up => {
-                                current_selection = match current_selection {
-                                    MenuOption::Play => MenuOption::Exit,
-                                    MenuOption::Config => MenuOption::Play,
-                                    MenuOption::Exit => MenuOption::Config,
-                                };
-                            }
+                            // Open the Config when C is pressed
+                            KeyCode::Char('c') => {
+                                config_popup = !config_popup;
+                                buttons_enabled = !buttons_enabled;
+                            },
 
-                            // Down navigation
-                            KeyCode::Down => {
-                                current_selection = match current_selection {
-                                    MenuOption::Play => MenuOption::Config,
-                                    MenuOption::Config => MenuOption::Exit,
-                                    MenuOption::Exit => MenuOption::Play,
-                                };
-                            }
-
-                            // Enter
-                            KeyCode::Enter => {
-                                let _ = terminal.draw(|f| {
-                                    let p_active = current_selection == MenuOption::Play;
-                                    let e_active = current_selection == MenuOption::Exit;
-                                    let c_active = current_selection == MenuOption::Config;
-                                    render_button(f, play_area, " PLAY ", p_active, p_active);
-                                    render_button(f, exit_area, " EXIT ", e_active, e_active);
-                                    render_button(f, config_area, " CONFIG ", c_active, c_active);
-                                });
-                                std::thread::sleep(std::time::Duration::from_millis(80));
-
-                                if current_selection == MenuOption::Exit {
-                                    break;
-                                } else {
+                            KeyCode::Char('p') => {
+                                if buttons_enabled {
                                     let _ = stdout().execute(event::DisableMouseCapture);
                                     ratatui::restore();
 
                                     display::run_game()?;
                                     return Ok(());
+                                }
+                            }
+
+                            // Up navigation
+                            KeyCode::Up => {
+                                if buttons_enabled {
+                                    current_selection = match current_selection {
+                                        MenuOption::Play => MenuOption::Exit,
+                                        MenuOption::Config => MenuOption::Play,
+                                        MenuOption::Exit => MenuOption::Config,
+                                    };
+                                }
+                            }
+
+                            // Down navigation
+                            KeyCode::Down => {
+                                if buttons_enabled {
+                                    current_selection = match current_selection {
+                                        MenuOption::Play => MenuOption::Config,
+                                        MenuOption::Config => MenuOption::Exit,
+                                        MenuOption::Exit => MenuOption::Play,
+                                    };
+                                }
+                            }
+
+                            KeyCode::Right => config_selection = (config_selection + 1) % 3,
+                            KeyCode::Left => config_selection = (config_selection + 2) % 3,
+
+                            // Enter
+                            KeyCode::Enter => {
+                                if buttons_enabled{
+                                    let _ = terminal.draw(|f| {
+                                        let p_active = current_selection == MenuOption::Play;
+                                        let e_active = current_selection == MenuOption::Exit;
+                                        let c_active = current_selection == MenuOption::Config;
+                                        render_button(f, play_area, " PLAY ", p_active, p_active);
+                                        render_button(f, exit_area, " EXIT ", e_active, e_active);
+                                        render_button(f, config_area, " CONFIG ", c_active, c_active);
+                                    });
+                                    std::thread::sleep(std::time::Duration::from_millis(80));
+
+                                    if current_selection == MenuOption::Exit {
+                                        break;
+                                    }else if current_selection == MenuOption::Config{
+                                        config_popup = !config_popup;
+                                        buttons_enabled = !buttons_enabled;
+                                    } else {
+                                        let _ = stdout().execute(event::DisableMouseCapture);
+                                        ratatui::restore();
+
+                                        display::run_game()?;
+                                        return Ok(());
+                                    }
                                 }
                             }
                             _ => {}
@@ -171,6 +208,55 @@ fn render(frame: &mut Frame) {
     // Set Background
     let full_background = Block::default().style(Style::default().bg(Color::Blue));
     frame.render_widget(full_background, frame.area());
+}
+
+fn render_config(frame: &mut Frame, show_popup: bool, selected_tab: usize) {
+    let area = frame.area();
+
+    let layout = Layout::vertical([Constraint::Length(1), Constraint::Fill(1)]);
+    let [instructions, content] = area.layout(&layout);
+
+    frame.render_widget(
+        Line::from("To navigate use: ◀ ▲ ▼ ▶ | play: p | config: c | exit: esc").centered(),
+        instructions,
+    );
+
+    frame.render_widget(Block::bordered(), content);
+
+    if show_popup{
+        let popup_block = Block::bordered().title("Config");
+        let centered_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(50));
+        // clears out any background in the area before rendering the popup
+        frame.render_widget(Clear, centered_area);
+
+        let tabs = Tabs::new(vec!["Video", "Sound", "Controller"])
+            .block(popup_block)
+            .style(Style::default().fg(Color::White))
+            .highlight_style(Style::default().fg(Color::Yellow).on_black().bold())
+            .select(selected_tab)
+            .divider(symbols::DOT)
+            .padding(" ", " ");
+        frame.render_widget(tabs, centered_area);
+    }
+}
+fn render_config_content(frame: &mut Frame, show_popup: bool, selected_tab: usize) {
+    let area = frame.area();
+    let centered_area = area.centered(Constraint::Percentage(60), Constraint::Percentage(50));
+
+    let text = match selected_tab {
+        0 => "Super cool Video settings.".into(),
+        1 => "Nah this is cooler sound Settings.".into(),
+        2 => "And this too controller Settings!".bold(),
+        _ => unreachable!(),
+    };
+
+    if show_popup{
+        let block = Paragraph::new(text)
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Center)
+            .block(Block::bordered());
+        frame.render_widget(block, centered_area);
+    }
 }
 
 fn render_title(frame: &mut Frame, area: Rect) {
