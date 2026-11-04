@@ -1,6 +1,7 @@
 //! Texturas embebidas en el binario (sin decodificar PNG en runtime) y tablas de niebla/sombreado.
 
 pub const FOG_LEVELS: usize = 32;
+pub const DEFAULT_COLOR_MASK: u32 = 0xF8;
 
 const G_BASE: f32 = 0.50;
 const G_GAIN: f32 = 0.35;
@@ -40,7 +41,7 @@ pub struct ShadedTexture {
 }
 
 impl ShadedTexture {
-    pub fn new(bmp: &Bitmap) -> Self {
+    pub fn new(bmp: &Bitmap, mask: u32) -> Self {
         let n = bmp.pixels.len();
         let mut table = vec![0u32; FOG_LEVELS * n];
         for level in 0..FOG_LEVELS {
@@ -52,7 +53,7 @@ impl ShadedTexture {
                 let r = (((c >> 16) & 0xff) as f32 * fr) as u32;
                 let g = (((c >> 8) & 0xff) as f32 * fg) as u32;
                 let b = ((c & 0xff) as f32 * fb) as u32;
-                table[level * n + i] = ((r & 0xF8) << 16) | ((g & 0xF8) << 8) | (b & 0xF8);
+                table[level * n + i] = ((r & mask) << 16) | ((g & mask) << 8) | (b & mask);
             }
         }
         ShadedTexture {
@@ -75,12 +76,12 @@ pub struct Textures {
 }
 
 impl Textures {
-    pub fn load() -> Self {
+    pub fn load(mask: u32) -> Self {
         let block = Bitmap::from_rgb(include_bytes!("../../assets/cobblestone.rgb"), 16, 16);
         let stone = Bitmap::from_rgb(include_bytes!("../../assets/stone.rgb"), 16, 16);
         Textures {
-            block: ShadedTexture::new(&block),
-            stone: ShadedTexture::new(&stone),
+            block: ShadedTexture::new(&block, mask),
+            stone: ShadedTexture::new(&stone, mask),
         }
     }
 }

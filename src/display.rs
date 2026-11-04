@@ -67,6 +67,8 @@ struct App {
 
     previous: Instant,
     lag: Duration,
+    frame_interval: Option<Duration>,
+    next_frame: Instant,
 }
 
 impl App {
@@ -74,11 +76,19 @@ impl App {
         let now = Instant::now();
         let mut renderer = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
         renderer.fov = settings.fov as f32;
+        renderer.set_color_mask(settings.color_mask());
+
+        let frame_interval = if settings.fps_limit == 0 {
+            None
+        } else {
+            Some(Duration::from_secs_f64(1.0 / settings.fps_limit as f64))
+        };
+
         App {
             gfx: None,
             game,
             settings,
-            renderer: Renderer::new(RENDER_WIDTH, RENDER_HEIGHT),
+            renderer,
             input: Input::default(),
             mouse_dx: 0.0,
             mouse_dy: 0.0,
@@ -91,6 +101,8 @@ impl App {
             fps_timer: now,
             previous: now,
             lag: Duration::ZERO,
+            frame_interval,
+            next_frame: now,
         }
     }
 
@@ -212,6 +224,11 @@ impl App {
             self.fps_timer = now;
         }
     }
+    fn request_redraw(&self) {
+        if let Some(gfx) = &self.gfx {
+            gfx.window.request_redraw();
+        }
+    }
 }
 
 impl ApplicationHandler for App {
@@ -238,6 +255,7 @@ impl ApplicationHandler for App {
         self.gfx = Some(Gfx { window, _context: context, surface });
         self.previous = Instant::now();
         self.lag = Duration::ZERO;
+        self.next_frame = Instant::now();
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
@@ -279,18 +297,28 @@ impl ApplicationHandler for App {
             self.lag = MAX_LAG;
         }
 
-        let mut ticked = false;
         while self.lag >= TICK {
             self.sim_tick();
             self.lag -= TICK;
-            ticked = true;
         }
-        if ticked {
-            if let Some(gfx) = &self.gfx {
-                gfx.window.request_redraw();
+        let next_tick = now + (TICK - self.lag);
+
+        match self.frame_interval {
+            None => {
+                self.request_redraw();
+                event_loop.set_control_flow(ControlFlow::Poll);
+            }
+            Some(interval) => {
+                if now >= self.next_frame {
+                    self.request_redraw();
+                    self.next_frame += interval;
+                    if self.next_frame < now {
+                        self.next_frame = now + interval;
+                    }
+                }
+                event_loop.set_control_flow(ControlFlow::WaitUntil(self.next_frame.min(next_tick)));
             }
         }
-        event_loop.set_control_flow(ControlFlow::WaitUntil(now + (TICK - self.lag)));
     }
 }
 

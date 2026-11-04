@@ -4,7 +4,7 @@
 
 use crate::display::game::Game;
 use crate::display::lighting::{self, Lighting};
-use crate::display::texture::{FOG_LEVELS, Textures};
+use crate::display::texture::{DEFAULT_COLOR_MASK, FOG_LEVELS, Textures};
 use crate::display::world::{AIR, SOLID, World};
 
 pub const RENDER_WIDTH: usize = 320;
@@ -60,7 +60,7 @@ impl Renderer {
             pixels: vec![0; width * height],
             fov: 70.0,
             lighting: Lighting::new(),
-            textures: Textures::load(),
+            textures: Textures::load(DEFAULT_COLOR_MASK),
             z_buffer: vec![0.0; width],
             cam: Camera::default(),
         }
@@ -116,6 +116,10 @@ impl Renderer {
             half_h: self.height as f32 * 0.5,
             focal,
         };
+    }
+
+    pub fn set_color_mask(&mut self, mask: u32) {
+        self.textures = Textures::load(mask);
     }
 
     fn render_floor_and_ceiling(&mut self, world: &World) {
