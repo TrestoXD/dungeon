@@ -23,12 +23,24 @@ const MOUSE_TURN: f64 = 0.004;
 const MOUSE_PITCH: f64 = 2.0;
 const PLAYER_RADIUS: f64 = 2.5;
 
+pub struct View {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub rotation: f64,
+    pub ylook: f64,
+}
 pub struct Player {
     pub x: f64,
     pub y: f64,
     pub z: f64,
     pub rotation: f64,
     pub ylook: f64,
+    prev_x: f64,
+    prev_y: f64,
+    prev_z: f64,
+    prev_rotation: f64,
+    prev_ylook: f64,
     xa: f64,
     za: f64,
     rotationa: f64,
@@ -53,6 +65,11 @@ impl Player {
             walk: false,
             sprint_walk: false,
             crouch_walk: false,
+            prev_x: x,
+            prev_y: 0.0,
+            prev_z: z,
+            prev_rotation: 0.0,
+            prev_ylook: 0.0,
         }
     }
 
@@ -62,7 +79,23 @@ impl Player {
         self.ylooka -= dy * MOUSE_PITCH;
     }
 
+    pub fn view(&self, alpha: f64) -> View {
+        let lerp = |a: f64, b: f64| a + (b - a) * alpha;
+        View {
+            x: lerp(self.prev_x, self.x),
+            y: lerp(self.prev_y, self.y),
+            z: lerp(self.prev_z, self.z),
+            rotation: lerp(self.prev_rotation, self.rotation),
+            ylook: lerp(self.prev_ylook, self.ylook),
+        }
+    }
     pub fn tick(&mut self, input: &Input, world: &World) {
+        self.prev_x = self.x;
+        self.prev_y = self.y;
+        self.prev_z = self.z;
+        self.prev_rotation = self.rotation;
+        self.prev_ylook = self.ylook;
+
         let mut walk_speed = 0.5;
         let jump_height = 0.8;
         let crouch_height = 0.3;

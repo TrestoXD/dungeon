@@ -1,48 +1,66 @@
-use std::{io::stdout, io::stderr, time::Duration};
+use std::{io::stdout, time::Duration};
 
 use color_eyre::Result;
 use crossterm::{
     event::{self, Event},
     ExecutableCommand,
 };
-use crossterm::terminal::EnterAlternateScreen;
 use ratatui::{layout::Rect, DefaultTerminal};
+use winit::event_loop::EventLoop;
 
-// Módulos nuevos del menú
 mod app;
-mod display; // tu run_game() de antes
+mod display;
 mod settings;
 mod ui;
-
-// Módulos del motor del juego (los que ya tienes)
-
 
 use app::{Action, App};
 use settings::Settings;
 
+/// Lo que devuelve el menú al terminar.
+struct MenuResult {
+    settings: Settings,
+    start_game: bool,
+}
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    stdout().execute(event::EnableMouseCapture)?;
-    let mut terminal = ratatui::init();
-    terminal.resize(Rect::new(0, 0, 80, 24))?;
-    
-    let outcome = run(&mut terminal);
+    // winit solo permite UN EventLoop por proceso: se crea aquí y se reutiliza en cada partida.
+    let mut event_loop = EventLoop::new()?;
+    let mut settings = Settings::load();
 
-    // Un único sitio donde se restaura el terminal, pase lo que pase.
-    let _ = stdout().execute(event::DisableMouseCapture);
-    ratatui::restore();
+    loop {
+        let before = settings.clone();
+        let result = run_menu(settings)?;
+        settings = result.settings;
 
-    // Solo con el terminal ya restaurado se abre la ventana del juego.
-    if let Some(settings) = outcome? {
-        display::run_game(&settings)?;
+        // Solo se escribe en disco si algo cambió.
+        if settings != before {
+            settings.save();
+        }
+        if !result.start_game {
+            break;
+        }
+        display::run_game(&settings, &mut event_loop)?;
     }
     Ok(())
 }
 
-/// Devuelve `Some(settings)` si hay que lanzar el juego, `None` si se sale.
-fn run(terminal: &mut DefaultTerminal) -> Result<Option<Settings>> {
-    let mut app = App::default();
+/// Abre el terminal, ejecuta el menú y lo restaura SIEMPRE (aunque `run` falle).
+fn run_menu(settings: Settings) -> Result<MenuResult> {
+    stdout().execute(event::EnableMouseCapture)?;
+    let mut terminal = ratatui::init();
+
+    let outcome = run(&mut terminal, settings);
+
+    let _ = stdout().execute(event::DisableMouseCapture);
+    ratatui::restore();
+    outcome
+}
+
+fn run(terminal: &mut DefaultTerminal, settings: Settings) -> Result<MenuResult> {
+    terminal.resize(Rect::new(0, 0, 80, 24))?;
+    let mut app = App::with_settings(settings);
 
     loop {
         // 1. Dibujar
@@ -65,8 +83,8 @@ fn run(terminal: &mut DefaultTerminal) -> Result<Option<Settings>> {
         // 3. Actuar
         match action {
             Action::None => {}
-            Action::Quit => return Ok(None),
-            Action::StartGame => return Ok(Some(app.settings.clone())),
+            Action::Quit => return Ok(MenuResult { settings: app.settings, start_game: false }),
+            Action::StartGame => return Ok(MenuResult { settings: app.settings, start_game: true }),
         }
     }
 }

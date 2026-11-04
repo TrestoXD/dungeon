@@ -18,10 +18,11 @@ use winit::event::{DeviceEvent, DeviceId, ElementState, MouseButton, WindowEvent
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{CursorGrabMode, Window, WindowId};
+use winit::platform::run_on_demand::EventLoopExtRunOnDemand;
 
 use game::Game;
 use player::Input;
-use render::{RENDER_HEIGHT, RENDER_WIDTH, Renderer, blit_scaled};
+use render::{RENDER_HEIGHT, RENDER_WIDTH, Renderer, blit_scaled, internal_size};
 use rng::Rng;
 
 use crate::settings::Settings;
@@ -57,6 +58,7 @@ struct App {
     mouse_dx: f64,
     mouse_dy: f64,
     grabbed: bool,
+    quit: bool,
 
     debug: bool,
     block_debug: String,
@@ -69,6 +71,8 @@ struct App {
     lag: Duration,
     frame_interval: Option<Duration>,
     next_frame: Instant,
+    alpha: f32,
+    closing: u8,
 }
 
 impl App {
@@ -103,6 +107,9 @@ impl App {
             lag: Duration::ZERO,
             frame_interval,
             next_frame: now,
+            alpha: 1.0,
+            quit: false,
+            closing: 0,
         }
     }
 
@@ -148,7 +155,13 @@ impl App {
             KeyCode::ControlLeft | KeyCode::ControlRight => self.input.sprint = down,
             KeyCode::ArrowLeft => self.input.turn_left = down,
             KeyCode::ArrowRight => self.input.turn_right = down,
-            KeyCode::Escape if down => self.release_cursor(),
+            KeyCode::Escape if down => {
+                if self.grabbed {
+                    self.release_cursor();
+                } else {
+                    self.quit = true;
+                }
+            }
             KeyCode::F3 if down && !repeat => self.debug = !self.debug,
             _ => {}
         }
@@ -175,6 +188,13 @@ impl App {
         }
     }
 
+    /// Destruye ventana, superficie y contexto con el bucle aún en marcha.
+    fn begin_close(&mut self) {
+        self.release_cursor();
+        self.gfx = None;
+        self.closing = 1;
+    }
+
     fn redraw(&mut self) {
         let Some(gfx) = self.gfx.as_mut() else { return };
         let size = gfx.window.inner_size();
@@ -182,21 +202,16 @@ impl App {
             return;
         };
 
-        self.renderer.render(&self.game);
+        let (dw, dh) = (size.width as usize, size.height as usize);
+        let (iw, ih, scale) = internal_size(dw, dh);
+        self.renderer.resize(iw, ih);
+        self.renderer.render_interpolated(&self.game, self.alpha);
 
         if gfx.surface.resize(w, h).is_err() {
             return;
         }
         let Ok(mut buffer) = gfx.surface.buffer_mut() else { return };
-        let (dw, dh) = (size.width as usize, size.height as usize);
-        let scale = blit_scaled(
-            &self.renderer.pixels,
-            RENDER_WIDTH,
-            RENDER_HEIGHT,
-            &mut buffer[..],
-            dw,
-            dh,
-        );
+        blit_scaled(&self.renderer.pixels, iw, ih, &mut buffer[..], dw, dh, scale);
 
         if self.debug {
             let margin = 8 * scale;
@@ -260,7 +275,8 @@ impl ApplicationHandler for App {
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::CloseRequested => self.quit = true,
+            WindowEvent::Destroyed => event_loop.exit(),
             WindowEvent::Focused(false) => {
                 self.input = Input::default();
                 self.release_cursor();
@@ -287,6 +303,20 @@ impl ApplicationHandler for App {
 
     /// Timestep fijo a 60 ticks/s (igual que el Java): se renderiza solo si hubo tick.
     fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if self.closing > 0 {
+            event_loop.set_control_flow(ControlFlow::Poll);
+            self.closing = self.closing.saturating_add(1);
+            if self.closing > 3 {
+                event_loop.exit();
+            }
+            return;
+        }
+        // Fase 1: se pidió salir.
+        if self.quit {
+            self.begin_close();
+            event_loop.set_control_flow(ControlFlow::Poll);
+            return;
+        }
         if self.gfx.is_none() {
             return;
         }
@@ -301,6 +331,7 @@ impl ApplicationHandler for App {
             self.sim_tick();
             self.lag -= TICK;
         }
+        self.alpha = (self.lag.as_secs_f32() / TICK.as_secs_f32()).clamp(0.0, 1.0);   // <- nuevo
         let next_tick = now + (TICK - self.lag);
 
         match self.frame_interval {
@@ -323,11 +354,11 @@ impl ApplicationHandler for App {
 }
 
 
-pub fn run_game(settings: &Settings) -> Result<()> {
+pub fn run_game(settings: &Settings, event_loop: &mut EventLoop<()>) -> Result<()> {
     let seed = Rng::from_time().next_u64();
     let game = Game::new(&mut Rng::new(seed));
-    let event_loop = EventLoop::new()?;
-    let mut app = App::new(game, settings.clone());   // guarda las opciones en App
-    event_loop.run_app(&mut app)?;
+    let mut app = App::new(game, settings.clone());
+    event_loop.run_app_on_demand(&mut app)?;
     Ok(())
+    // aquí `app` se destruye y con él la ventana, antes de que el menú vuelva a abrirse
 }

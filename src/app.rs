@@ -121,6 +121,11 @@ impl App {
         }
     }
 
+    /// Menú nuevo que conserva las opciones de la partida anterior.
+    pub fn with_settings(settings: Settings) -> Self {
+        App { settings, ..App::default() }
+    }
+
     pub fn on_key(&mut self, key: KeyEvent) -> Action {
         if key.kind != KeyEventKind::Press {
             return Action::None;

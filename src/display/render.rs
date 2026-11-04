@@ -9,6 +9,7 @@ use crate::display::world::{AIR, SOLID, World};
 
 pub const RENDER_WIDTH: usize = 320;
 pub const RENDER_HEIGHT: usize = 240;
+pub const TARGET_HEIGHT: usize = 240;
 
 const FLOOR_POS: f32 = 8.0;
 const CEILING_POS: f32 = 40.0;
@@ -23,6 +24,15 @@ const FIX_SHIFT: u32 = 16;
 const FIX_ONE: f32 = 65536.0;
 const MAX_LEVEL: i32 = FOG_LEVELS as i32 - 1;
 const LIGHT_SHIFT: u32 = lighting::FIX_SHIFT;
+
+pub fn internal_size(win_w: usize, win_h: usize) -> (usize, usize, usize) {
+    let scale = win_h.div_ceil(TARGET_HEIGHT).max(1);
+    (
+        win_w.div_ceil(scale).max(1),
+        win_h.div_ceil(scale).max(1),
+        scale,
+    )
+}
 
 #[derive(Clone, Copy, Default)]
 struct Camera {
@@ -41,6 +51,15 @@ struct Camera {
     focal: f32,
 }
 
+#[derive(Clone, Copy)]
+struct Face {
+    dist: f32,
+    x0: usize,
+    z0: usize,
+    x1: usize,
+    z1: usize,
+}
+
 pub struct Renderer {
     pub width: usize,
     pub height: usize,
@@ -50,7 +69,10 @@ pub struct Renderer {
     textures: Textures,
     z_buffer: Vec<f32>,
     cam: Camera,
+    faces: Vec<Face>,
 }
+
+
 
 impl Renderer {
     pub fn new(width: usize, height: usize) -> Self {
@@ -63,32 +85,40 @@ impl Renderer {
             textures: Textures::load(DEFAULT_COLOR_MASK),
             z_buffer: vec![0.0; width],
             cam: Camera::default(),
+            faces: Vec::with_capacity(512),
         }
     }
 
+
     pub fn render(&mut self, game: &Game) {
-        self.setup_camera(game);
+        self.render_interpolated(game, 1.0);
+    }
+    pub fn render_interpolated(&mut self, game: &Game, alpha: f32) {
+        self.setup_camera(game, alpha);
         self.z_buffer.fill(0.0);
-        let (lx, lz) = (self.cam.right / 16.0, self.cam.forward / 16.0);
+        // La luz usa la posición REAL del tick, no la interpolada: así solo se
+        // recalcula 60 veces por segundo aunque se dibuje a 120 o sin límite.
+        let (lx, lz) = (game.player.x as f32 / 16.0, game.player.z as f32 / 16.0);
         self.lighting.update(lx, lz, &game.world, game.time);
         self.render_floor_and_ceiling(&game.world);
         self.render_walls(&game.world);
     }
 
-    fn setup_camera(&mut self, game: &Game) {
+    fn setup_camera(&mut self, game: &Game, alpha: f32) {
         let p = &game.player;
-        let forward = p.z as f32;
-        let right = p.x as f32;
-        let up = p.y as f32 + 16.0;
-        let y_look = p.ylook as f32 * self.height as f32 / REF_HEIGHT;
+        let v = p.view(alpha as f64);
+        let forward = v.z as f32;
+        let right = v.x as f32;
+        let up = v.y as f32 + 16.0;
+        let y_look = v.ylook as f32 * self.height as f32 / REF_HEIGHT;
 
-        let cosine = p.rotation.cos() as f32;
-        let sine = p.rotation.sin() as f32;
+        let cosine = v.rotation.cos() as f32;
+        let sine = v.rotation.sin() as f32;
 
         let half_w = self.width as f32 * 0.5;
-        let focal = half_w / (self.fov.to_radians() * 0.5).tan();
+        let focal = (self.height as f32 * (2.0 / 3.0)) / (self.fov.to_radians() * 0.5).tan();
 
-        let t = game.time as f64;
+        let t = game.time as f64 - 1.0 + alpha as f64;
         let walking = if p.walk {
             if p.crouch_walk {
                 ((t / 6.0).sin() * 0.2) as f32
@@ -120,6 +150,16 @@ impl Renderer {
 
     pub fn set_color_mask(&mut self, mask: u32) {
         self.textures = Textures::load(mask);
+    }
+
+    pub fn resize(&mut self, width: usize, height: usize) {
+        if width == self.width && height == self.height {
+            return;
+        }
+        self.width = width;
+        self.height = height;
+        self.pixels.resize(width * height, 0);
+        self.z_buffer.resize(width, 0.0);
     }
 
     fn render_floor_and_ceiling(&mut self, world: &World) {
@@ -194,6 +234,16 @@ impl Renderer {
         let (w, h) = (world.width, world.height);
         let s = world.grid_stride();
         let grid = world.grid();
+        let (cx, cz) = (self.cam.cam_x, self.cam.cam_z);
+
+        // Se saca el Vec de self para poder llamar a render_wall (&mut self) mientras se recorre.
+        let mut faces = std::mem::take(&mut self.faces);
+        faces.clear();
+        let mut push = |x0: usize, z0: usize, x1: usize, z1: usize| {
+            let dx = (x0 + x1) as f32 * 0.5 - cx;
+            let dz = (z0 + z1) as f32 * 0.5 - cz;
+            faces.push(Face { dist: dx * dx + dz * dz, x0, z0, x1, z1 });
+        };
 
         for z in 0..h {
             for x in 0..w {
@@ -202,19 +252,26 @@ impl Renderer {
                     continue;
                 }
                 if grid[i - s] == AIR {
-                    self.render_wall(x, z, x + 1, z); // norte
+                    push(x, z, x + 1, z); // norte
                 }
                 if grid[i + s] == AIR {
-                    self.render_wall(x + 1, z + 1, x, z + 1); // sur
+                    push(x + 1, z + 1, x, z + 1); // sur
                 }
                 if grid[i - 1] == AIR {
-                    self.render_wall(x, z + 1, x, z); // oeste
+                    push(x, z + 1, x, z); // oeste
                 }
                 if grid[i + 1] == AIR {
-                    self.render_wall(x + 1, z, x + 1, z + 1); // este
+                    push(x + 1, z, x + 1, z + 1); // este
                 }
             }
         }
+
+        // De la más cercana a la más lejana.
+        faces.sort_unstable_by(|a, b| a.dist.total_cmp(&b.dist));
+        for f in &faces {
+            self.render_wall(f.x0, f.z0, f.x1, f.z1);
+        }
+        self.faces = faces;
     }
 
     /// Cara de celda de (xl0, zl0) a (xr0, zr0), en coordenadas enteras de rejilla.
@@ -334,26 +391,32 @@ impl Renderer {
 
 /// Escala `src` a `dst` por un factor entero (vecino más cercano), centrado y con barras negras.
 /// Devuelve el factor usado. Cada fila se expande una vez y se copia las demás veces.
-pub fn blit_scaled(src: &[u32], sw: usize, sh: usize, dst: &mut [u32], dw: usize, dh: usize) -> usize {
+pub fn blit_scaled(
+    src: &[u32],
+    sw: usize,
+    sh: usize,
+    dst: &mut [u32],
+    dw: usize,
+    dh: usize,
+    scale: usize,
+) {
     debug_assert_eq!(src.len(), sw * sh);
     debug_assert_eq!(dst.len(), dw * dh);
-    let scale = (dw / sw).min(dh / sh).max(1);
-    let out_w = sw * scale;
-    let out_h = sh * scale;
-    let ox = dw.saturating_sub(out_w) / 2;
-    let oy = dh.saturating_sub(out_h) / 2;
-    if out_w != dw || out_h != dh {
+    let scale = scale.max(1);
+    let visible_w = (sw * scale).min(dw);
+
+    // Con `internal_size` esto no ocurre; es solo una red de seguridad.
+    if visible_w < dw || sh * scale < dh {
         dst.fill(0);
     }
-    let visible_w = out_w.min(dw);
 
     for sy in 0..sh {
-        let dy0 = oy + sy * scale;
+        let dy0 = sy * scale;
         if dy0 >= dh {
             break;
         }
         let src_row = &src[sy * sw..(sy + 1) * sw];
-        let first = dy0 * dw + ox;
+        let first = dy0 * dw;
         {
             let dst_row = &mut dst[first..first + visible_w];
             for (sx, &p) in src_row.iter().enumerate() {
@@ -361,8 +424,7 @@ pub fn blit_scaled(src: &[u32], sw: usize, sh: usize, dst: &mut [u32], dw: usize
                 if start >= visible_w {
                     break;
                 }
-                let end = (start + scale).min(visible_w);
-                dst_row[start..end].fill(p);
+                dst_row[start..(start + scale).min(visible_w)].fill(p);
             }
         }
         for k in 1..scale {
@@ -370,10 +432,9 @@ pub fn blit_scaled(src: &[u32], sw: usize, sh: usize, dst: &mut [u32], dw: usize
             if dy >= dh {
                 break;
             }
-            dst.copy_within(first..first + visible_w, dy * dw + ox);
+            dst.copy_within(first..first + visible_w, dy * dw);
         }
     }
-    scale
 }
 
 #[cfg(test)]
@@ -430,15 +491,81 @@ mod tests {
     }
 
     #[test]
-    fn blit_scales_and_centers() {
-        let src = [1u32, 2, 3, 4]; // 2x2
-        let mut dst = vec![9u32; 6 * 5];
-        let scale = blit_scaled(&src, 2, 2, &mut dst, 6, 5);
-        assert_eq!(scale, 2);
-        // área 4x4 centrada: ox = 1, oy = 0 (5-4)/2 = 0
-        assert_eq!(&dst[1..5], &[1, 1, 2, 2]);
-        assert_eq!(&dst[6 + 1..6 + 5], &[1, 1, 2, 2]);
-        assert_eq!(&dst[2 * 6 + 1..2 * 6 + 5], &[3, 3, 4, 4]);
-        assert_eq!(dst[0], 0); // barra negra
+    fn blit_scales_and_crops() {
+        let src = [1u32, 2, 3, 4]; // 2x2 a escala 3 = 6x6, ventana 5x5: recorta
+        let mut dst = vec![9u32; 25];
+        blit_scaled(&src, 2, 2, &mut dst, 5, 5, 3);
+        assert_eq!(&dst[0..5], &[1, 1, 1, 2, 2]);
+        assert_eq!(&dst[15..20], &[3, 3, 3, 4, 4]);
+        assert!(dst.iter().all(|&p| p != 9)); // no queda ningún píxel sin cubrir
+    }
+
+    #[test]
+    fn internal_size_covers_window() {
+        for (w, h) in [(960, 720), (1920, 1080), (2560, 1440), (1366, 768), (800, 600), (321, 241)] {
+            let (iw, ih, s) = internal_size(w, h);
+            assert!(iw * s >= w && ih * s >= h);
+            assert!(iw * s - w < s && ih * s - h < s); // recorte menor que un píxel interno
+            assert!(ih <= TARGET_HEIGHT);
+        }
+        assert_eq!(internal_size(960, 720), (320, 240, 3));
+    }
+
+    #[test]
+    #[ignore = "benchmark: cargo test --release bench_stages -- --ignored --nocapture"]
+    fn bench_stages() {
+        use std::time::{Duration, Instant};
+
+        const WARMUP: u32 = 300;
+        const FRAMES: u32 = 3000;
+        const WIN_W: usize = 1920;
+        const WIN_H: usize = 1080;
+
+        let mut g = game(1234);
+        let mut r = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+        let mut window = vec![0u32; WIN_W * WIN_H];
+        let mut input = Input::default();
+        let (iw, ih, scale) = internal_size(WIN_W, WIN_H);
+        let mut r = Renderer::new(iw, ih);
+        input.turn_right = true;
+
+        let (mut t_light, mut t_floor, mut t_walls, mut t_blit) =
+            (Duration::ZERO, Duration::ZERO, Duration::ZERO, Duration::ZERO);
+
+        for i in 0..(WARMUP + FRAMES) {
+            input.forward = (i / 120) % 2 == 0;
+            g.tick(&input);
+
+            let a = Instant::now();
+            r.setup_camera(&g, 1.0);
+            r.z_buffer.fill(0.0);
+            let (lx, lz) = (g.player.x as f32 / 16.0, g.player.z as f32 / 16.0);
+            r.lighting.update(lx, lz, &g.world, g.time);
+            let b = Instant::now();
+            r.render_floor_and_ceiling(&g.world);
+            let c = Instant::now();
+            r.render_walls(&g.world);
+            let d = Instant::now();
+            blit_scaled(&r.pixels, iw, ih, &mut window, WIN_W, WIN_H, scale);
+            let e = Instant::now();
+
+            if i >= WARMUP {
+                t_light += b - a;
+                t_floor += c - b;
+                t_walls += d - c;
+                t_blit += e - d;
+            }
+        }
+        std::hint::black_box(&window);
+
+        let total = t_light + t_floor + t_walls + t_blit;
+        let ms = |t: Duration| t.as_secs_f64() * 1000.0 / FRAMES as f64;
+        let pct = |t: Duration| 100.0 * t.as_secs_f64() / total.as_secs_f64();
+        println!("\n--- ms por frame (media de {FRAMES}) ---");
+        println!("camara + luz     {:7.3} ms  {:5.1} %", ms(t_light), pct(t_light));
+        println!("suelo y techo    {:7.3} ms  {:5.1} %", ms(t_floor), pct(t_floor));
+        println!("paredes          {:7.3} ms  {:5.1} %", ms(t_walls), pct(t_walls));
+        println!("escalado ventana {:7.3} ms  {:5.1} %", ms(t_blit), pct(t_blit));
+        println!("TOTAL            {:7.3} ms  ({:.0} FPS teóricos)", ms(total), 1000.0 / ms(total));
     }
 }

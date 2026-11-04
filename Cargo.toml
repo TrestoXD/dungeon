@@ -11,3 +11,5 @@ ratatui = "0.30.2"
 crossterm = "0.29.0"
 color-eyre = "0.6.5"
 softbuffer = "0.4.8"
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.2.0"
