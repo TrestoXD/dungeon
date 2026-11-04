@@ -1,10 +1,11 @@
-use std::{io::stdout, time::Duration};
+use std::{io::stdout, io::stderr, time::Duration};
 
 use color_eyre::Result;
 use crossterm::{
     event::{self, Event},
     ExecutableCommand,
 };
+use crossterm::terminal::EnterAlternateScreen;
 use ratatui::{layout::Rect, DefaultTerminal};
 
 // Módulos nuevos del menú
@@ -25,7 +26,7 @@ fn main() -> Result<()> {
     stdout().execute(event::EnableMouseCapture)?;
     let mut terminal = ratatui::init();
     terminal.resize(Rect::new(0, 0, 80, 24))?;
-
+    
     let outcome = run(&mut terminal);
 
     // Un único sitio donde se restaura el terminal, pase lo que pase.
