@@ -47,14 +47,9 @@ To compile and run this project, you need the Rust toolchain installed. If you d
    cd dungeon
    ```
 
-2. Run the project in development mode:
+2. Run the project:
    ```bash
    cargo run
-   ```
-
-3. Run the project with performance optimizations (highly recommended for 3D rendering):
-   ```bash
-   cargo run --release
    ```
 
 ## Project Funding Model (Steam)
