@@ -20,11 +20,11 @@ Welcome to **Dungeon**! This is an experimental 3D game engine and dungeon-crawl
 
 ## Key Features
 
-* **Custom 3D Engine:** Native matrix mathematics, vector operations, and rendering pipeline built from scratch.
-* **Software Pixel Buffer:** Seamless window management and direct pixel manipulation powered by `softbuffer` and `winit`.
-* **Terminal UI Integration:** Real-time debugging tools, internal metrics, and console management utilizing `ratatui` and `crossterm`.
-* **Asset & Config Management:** Optimized state loading and data management using `toml` configurations and `serde`.
-* **Robust Error Handling:** Crystal-clear runtime diagnostics and crash reporting implemented with `color-eyre`.
+* **Custom 3D Engine:**
+* **Software Pixel Buffer:**
+* **Terminal UI Integration:**
+* **Asset & Config Management:**
+* **Robust Error Handling:**
 
 ## Tech Stack
 
