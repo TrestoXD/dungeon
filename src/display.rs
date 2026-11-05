@@ -80,7 +80,7 @@ impl App {
         let now = Instant::now();
         let mut renderer = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
         renderer.fov = settings.fov as f32;
-        renderer.set_color_mask(settings.color_mask());
+        renderer.set_color_mask(settings.color_mask(), settings.fog_shift());
 
         let frame_interval = if settings.fps_limit == 0 {
             None

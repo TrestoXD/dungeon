@@ -47,7 +47,7 @@ pub fn draw(frame: &mut Frame, cfg: &ConfigState, settings: &Settings) {
         tab => {
             let mut state = ListState::default().with_selected(Some(cfg.row));
             let list = List::new(settings.rows(tab))
-                .highlight_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+                .highlight_style(Style::default().bg(Color::Yellow).add_modifier(Modifier::BOLD))
                 .highlight_symbol("> ");
             frame.render_stateful_widget(list, content_area, &mut state);
         }

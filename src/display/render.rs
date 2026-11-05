@@ -3,8 +3,8 @@
 //! paredes con interpolación afín (estilo PSX a propósito) y z-buffer por columna.
 
 use crate::display::game::Game;
-use crate::display::lighting::{self, Lighting};
-use crate::display::texture::{DEFAULT_COLOR_MASK, FOG_LEVELS, Textures};
+use crate::display::lighting::Lighting;
+use crate::display::texture::{DEFAULT_COLOR_MASK, DEFAULT_FOG_SHIFT, Textures};
 use crate::display::world::{AIR, SOLID, World};
 
 pub const RENDER_WIDTH: usize = 320;
@@ -22,8 +22,6 @@ const SNAP: f32 = 1.0;
 
 const FIX_SHIFT: u32 = 16;
 const FIX_ONE: f32 = 65536.0;
-const MAX_LEVEL: i32 = FOG_LEVELS as i32 - 1;
-const LIGHT_SHIFT: u32 = lighting::FIX_SHIFT;
 
 pub fn internal_size(win_w: usize, win_h: usize) -> (usize, usize, usize) {
     let scale = win_h.div_ceil(TARGET_HEIGHT).max(1);
@@ -82,7 +80,7 @@ impl Renderer {
             pixels: vec![0; width * height],
             fov: 70.0,
             lighting: Lighting::new(),
-            textures: Textures::load(DEFAULT_COLOR_MASK),
+            textures: Textures::load(DEFAULT_COLOR_MASK, DEFAULT_FOG_SHIFT),
             z_buffer: vec![0.0; width],
             cam: Camera::default(),
             faces: Vec::with_capacity(512),
@@ -148,8 +146,8 @@ impl Renderer {
         };
     }
 
-    pub fn set_color_mask(&mut self, mask: u32) {
-        self.textures = Textures::load(mask);
+    pub fn set_color_mask(&mut self, mask: u32, fog_shift: u32) {
+        self.textures = Textures::load(mask, fog_shift);
     }
 
     pub fn resize(&mut self, width: usize, height: usize) {
@@ -173,12 +171,14 @@ impl Renderer {
         let tex = &self.textures.block;
         let table = &tex.table[..];
         let shift = tex.tile_shift;
+        let fog = tex.fog_shift;
+        let max_level = tex.max_level;
         let (mu, mv, sv) = (tex.mask_u, tex.mask_v, tex.shift_v);
 
         let lv = &self.lighting.vertex_light[..];
         let ls = self.lighting.stride;
         let (cw, ch) = (world.width as i32, world.height as i32);
-        let outside = ((self.lighting.ambient_fix() >> LIGHT_SHIFT) << shift) as usize;
+        let outside = ((self.lighting.ambient_fix() >> fog) << shift) as usize;
 
         for y in 0..height {
             let mut c = ((y as i32 - half_height) as f32 - cam.y_look) * inv_focal;
@@ -218,7 +218,7 @@ impl Renderer {
                     let top = a + (((b - a) * fx) >> 8);
                     let bot = cc + (((d - cc) * fx) >> 8);
                     let light = top + (((bot - top) * fz) >> 8);
-                    ((light >> LIGHT_SHIFT) << shift) as usize
+                    ((light >> fog) << shift) as usize
                 } else {
                     outside
                 };
@@ -349,6 +349,8 @@ impl Renderer {
         let d_inv_z = inv_rz - inv_lz;
 
         let shift = tex.tile_shift;
+        let fog = tex.fog_shift;
+        let max_level = tex.max_level;
         let (mu, mv, sv) = (tex.mask_u, tex.mask_v, tex.shift_v);
 
         for x in x0..x1 {
@@ -372,7 +374,7 @@ impl Renderer {
                 continue;
             }
 
-            let level = (((light_l + d_light * t) as i32) >> LIGHT_SHIFT).clamp(0, MAX_LEVEL);
+            let level = (((light_l + d_light * t) as i32) >> fog).clamp(0, max_level);
             let base = ((level as usize) << shift) + (((u_l + d_u * t) as i32) & mu) as usize;
 
             let v_step = tex_h / (y_bot - y_top);

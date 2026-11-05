@@ -36,6 +36,17 @@ impl Settings {
         (0xFFu32 << (8 - bits)) & 0xFF
     }
 
+    pub fn fog_shift(&self) -> u32 {
+        match self.color_aspect {
+            16 => 9,
+            32 => 8,
+            64 => 7,
+            128 => 6,
+            256 => 5,
+            _ => 8,
+        }
+    }
+
     /// Las filas que se muestran en cada pestaña. Es la ÚNICA fuente de verdad:
     /// la UI las dibuja y `app.rs` usa `.len()` para saber cuántas hay.
     pub fn rows(&self, tab: Tab) -> Vec<String> {

@@ -5,8 +5,8 @@ use crate::display::texture::FOG_LEVELS;
 use crate::display::world::{AIR, World};
 
 pub const FIX_SHIFT: u32 = 8;
+pub const MAX_FIX: i32 = ((FOG_LEVELS as i32) - 1) << FIX_SHIFT;
 const FIX_ONE: f32 = 256.0;
-const MAX_FIX: i32 = ((FOG_LEVELS as i32) - 1) << FIX_SHIFT;
 const LOS_STEP: f32 = 0.25;
 
 pub struct Lighting {
