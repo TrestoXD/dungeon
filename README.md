@@ -43,7 +43,7 @@ To compile and run this project, you need the Rust toolchain installed. If you d
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com
+   git clone https://github.com/TrestoXD/dungeon
    cd dungeon
    ```
 
