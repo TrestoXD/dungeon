@@ -52,13 +52,14 @@ To compile and run this project, you need the Rust toolchain installed. If you d
    cargo run
    ```
 
-## Project Funding Model (Steam)
+<!--
+## Project Funding Model (Steam) 
 
 Dungeon follows a funding model inspired by open-source projects like **Krita**. 
 
 * **The Code is Free:** The entire source code is hosted here on GitHub under the GPL v3 license. Anyone can clone, compile, and play it for free.
 * **Support via Steam:** We offer pre-compiled, optimized packages on Steam for a small fee (€7-8). Purchasing the game on Steam is completely voluntary; it gives you the convenience of automatic updates, cloud saves, and directly supports the continuous development of this project.
-
+-->
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to understand our workflow and license agreements before submitting any code.
