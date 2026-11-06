@@ -1,21 +1,24 @@
 //! Fondo, título y los tres botones.
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     text::Text,
     widgets::{Block, Paragraph},
-    Frame,
 };
 
-use super::{widgets::render_button, MenuLayout};
+use super::{MenuLayout, widgets::render_button};
 use crate::app::{App, MenuItem};
 
 pub fn draw(frame: &mut Frame, app: &App, layout: &MenuLayout) {
     let area = frame.area();
 
     // Fondo
-    frame.render_widget(Block::default().style(Style::default().bg(Color::Blue)), area);
+    frame.render_widget(
+        Block::default().style(Style::default().bg(Color::Blue)),
+        area,
+    );
 
     // Línea de ayuda arriba
     let help = Paragraph::new("◀ ▲ ▼ ▶ navigate | p: play | c: config | Esc: exit")
@@ -50,7 +53,11 @@ fn draw_title(frame: &mut Frame, area: Rect) {
     "#;
 
     let title_height = ascii_title.lines().filter(|l| !l.is_empty()).count() as u16;
-    let title_width = ascii_title.lines().map(|l| l.chars().count()).max().unwrap_or(0) as u16;
+    let title_width = ascii_title
+        .lines()
+        .map(|l| l.chars().count())
+        .max()
+        .unwrap_or(0) as u16;
 
     let centered = Rect::new(
         area.x + area.width.saturating_sub(title_width) / 2,
@@ -59,7 +66,10 @@ fn draw_title(frame: &mut Frame, area: Rect) {
         title_height.min(area.height),
     );
 
-    let title = Paragraph::new(Text::from(ascii_title))
-        .style(Style::default().fg(Color::Black).add_modifier(Modifier::BOLD));
+    let title = Paragraph::new(Text::from(ascii_title)).style(
+        Style::default()
+            .fg(Color::Black)
+            .add_modifier(Modifier::BOLD),
+    );
     frame.render_widget(title, centered);
 }

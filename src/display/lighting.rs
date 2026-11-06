@@ -97,7 +97,12 @@ impl Lighting {
         let z0 = ((pz - radius).floor() as i32).max(0);
         let z1 = ((pz + radius).ceil() as i32).min(vh - 1);
 
-        let occ = Occluders { grid: world.grid(), stride: world.grid_stride(), vw, vh };
+        let occ = Occluders {
+            grid: world.grid(),
+            stride: world.grid_stride(),
+            vw,
+            vh,
+        };
         for vz in z0..=z1 {
             let row = vz as usize * self.vw;
             for vx in x0..=x1 {
@@ -161,7 +166,15 @@ impl Occluders<'_> {
     }
 }
 
-fn light_at(occ: &Occluders<'_>, radius: f32, vx: i32, vz: i32, lx: f32, lz: f32, peak: f32) -> f32 {
+fn light_at(
+    occ: &Occluders<'_>,
+    radius: f32,
+    vx: i32,
+    vz: i32,
+    lx: f32,
+    lz: f32,
+    peak: f32,
+) -> f32 {
     let dx = vx as f32 - lx;
     let dz = vz as f32 - lz;
     let d2 = dx * dx + dz * dz;

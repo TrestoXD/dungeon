@@ -28,7 +28,11 @@ impl Bitmap {
             .chunks_exact(3)
             .map(|c| ((c[0] as u32) << 16) | ((c[1] as u32) << 8) | (c[2] as u32))
             .collect();
-        Bitmap { width, height, pixels }
+        Bitmap {
+            width,
+            height,
+            pixels,
+        }
     }
 }
 
@@ -71,7 +75,7 @@ impl ShadedTexture {
             shift_v: bmp.width.trailing_zeros(),
             tile_shift: n.trailing_zeros(),
             fog_shift,
-            max_level: rows as i32 -1,
+            max_level: rows as i32 - 1,
         }
     }
 }

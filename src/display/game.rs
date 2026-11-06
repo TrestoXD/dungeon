@@ -15,7 +15,11 @@ impl Game {
         let world = World::generate(16, 16, rng);
         // Create the plyer
         let player = Player::new(world.spawn.0, world.spawn.1);
-        Game { time: 0, player, world }
+        Game {
+            time: 0,
+            player,
+            world,
+        }
     }
 
     // Tick Function

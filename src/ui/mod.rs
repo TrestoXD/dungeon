@@ -4,7 +4,7 @@ mod config;
 mod menu;
 mod widgets;
 
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 
 use crate::app::{App, Screen};
 

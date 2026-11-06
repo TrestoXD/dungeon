@@ -2,10 +2,10 @@ use std::{io::stdout, time::Duration};
 
 use color_eyre::Result;
 use crossterm::{
-    event::{self, Event},
     ExecutableCommand,
+    event::{self, Event},
 };
-use ratatui::{layout::Rect, DefaultTerminal};
+use ratatui::{DefaultTerminal, layout::Rect};
 use winit::event_loop::EventLoop;
 
 mod app;
@@ -83,8 +83,18 @@ fn run(terminal: &mut DefaultTerminal, settings: Settings) -> Result<MenuResult>
         // 3. Actuar
         match action {
             Action::None => {}
-            Action::Quit => return Ok(MenuResult { settings: app.settings, start_game: false }),
-            Action::StartGame => return Ok(MenuResult { settings: app.settings, start_game: true }),
+            Action::Quit => {
+                return Ok(MenuResult {
+                    settings: app.settings,
+                    start_game: false,
+                });
+            }
+            Action::StartGame => {
+                return Ok(MenuResult {
+                    settings: app.settings,
+                    start_game: true,
+                });
+            }
         }
     }
 }

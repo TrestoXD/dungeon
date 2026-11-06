@@ -17,8 +17,8 @@ use winit::dpi::PhysicalSize;
 use winit::event::{DeviceEvent, DeviceId, ElementState, MouseButton, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{CursorGrabMode, Window, WindowId};
 use winit::platform::run_on_demand::EventLoopExtRunOnDemand;
+use winit::window::{CursorGrabMode, Window, WindowId};
 
 use game::Game;
 use player::Input;
@@ -39,8 +39,6 @@ const TICK: Duration = Duration::from_nanos(TICK_NANOS);
 const MAX_LAG: Duration = Duration::from_nanos(TICK_NANOS * 5);
 
 const CYAN: u32 = 0x00_FF_FF;
-
-
 
 struct Gfx {
     window: Rc<Window>,
@@ -210,13 +208,32 @@ impl App {
         if gfx.surface.resize(w, h).is_err() {
             return;
         }
-        let Ok(mut buffer) = gfx.surface.buffer_mut() else { return };
-        blit_scaled(&self.renderer.pixels, iw, ih, &mut buffer[..], dw, dh, scale);
+        let Ok(mut buffer) = gfx.surface.buffer_mut() else {
+            return;
+        };
+        blit_scaled(
+            &self.renderer.pixels,
+            iw,
+            ih,
+            &mut buffer[..],
+            dw,
+            dh,
+            scale,
+        );
 
         if self.debug {
             let margin = 8 * scale;
             let fps_text = format!("{} FPS", self.fps);
-            font::draw_text(&mut buffer[..], dw, dh, margin, margin, scale, CYAN, &fps_text);
+            font::draw_text(
+                &mut buffer[..],
+                dw,
+                dh,
+                margin,
+                margin,
+                scale,
+                CYAN,
+                &fps_text,
+            );
             let tw = font::text_width(&self.block_debug, scale);
             font::draw_text(
                 &mut buffer[..],
@@ -251,7 +268,8 @@ impl ApplicationHandler for App {
         if self.gfx.is_some() {
             return;
         }
-        let mut attrs = Window::default_attributes().with_title(TITLE)
+        let mut attrs = Window::default_attributes()
+            .with_title(TITLE)
             .with_inner_size(PhysicalSize::new(WIN_W, WIN_H));
         if self.settings.fullscreen {
             attrs = attrs.with_fullscreen(Some(Fullscreen::Borderless(None)));
@@ -264,10 +282,16 @@ impl ApplicationHandler for App {
                 return;
             }
         };
-        let context = Context::new(window.clone()).expect("softbuffer: no se pudo crear el contexto");
-        let surface = Surface::new(&context, window.clone()).expect("softbuffer: no se pudo crear la superficie");
+        let context =
+            Context::new(window.clone()).expect("softbuffer: no se pudo crear el contexto");
+        let surface = Surface::new(&context, window.clone())
+            .expect("softbuffer: no se pudo crear la superficie");
         window.request_redraw();
-        self.gfx = Some(Gfx { window, _context: context, surface });
+        self.gfx = Some(Gfx {
+            window,
+            _context: context,
+            surface,
+        });
         self.previous = Instant::now();
         self.lag = Duration::ZERO;
         self.next_frame = Instant::now();
@@ -284,7 +308,11 @@ impl ApplicationHandler for App {
             WindowEvent::KeyboardInput { event, .. } => {
                 self.on_key(event.physical_key, event.state, event.repeat);
             }
-            WindowEvent::MouseInput { state: ElementState::Pressed, button: MouseButton::Left, .. } => {
+            WindowEvent::MouseInput {
+                state: ElementState::Pressed,
+                button: MouseButton::Left,
+                ..
+            } => {
                 self.grab_cursor();
             }
             WindowEvent::RedrawRequested => self.redraw(),
@@ -331,7 +359,7 @@ impl ApplicationHandler for App {
             self.sim_tick();
             self.lag -= TICK;
         }
-        self.alpha = (self.lag.as_secs_f32() / TICK.as_secs_f32()).clamp(0.0, 1.0);   // <- nuevo
+        self.alpha = (self.lag.as_secs_f32() / TICK.as_secs_f32()).clamp(0.0, 1.0); // <- nuevo
         let next_tick = now + (TICK - self.lag);
 
         match self.frame_interval {
@@ -352,7 +380,6 @@ impl ApplicationHandler for App {
         }
     }
 }
-
 
 pub fn run_game(settings: &Settings, event_loop: &mut EventLoop<()>) -> Result<()> {
     let seed = Rng::from_time().next_u64();

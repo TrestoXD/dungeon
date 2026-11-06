@@ -24,7 +24,10 @@ pub struct World {
 impl World {
     /// Generate the World
     pub fn generate(width: usize, height: usize, rng: &mut Rng) -> World {
-        assert!(width >= 3 && height >= 3, "The world needs a minimum of 3x3");
+        assert!(
+            width >= 3 && height >= 3,
+            "The world needs a minimum of 3x3"
+        );
         let idx = |x: usize, y: usize| x + y * width;
         let mut cells = vec![true; width * height];
 
@@ -76,7 +79,14 @@ impl World {
             }
         }
 
-        World { width, height, version: 0, spawn, cells, grid }
+        World {
+            width,
+            height,
+            version: 0,
+            spawn,
+            cells,
+            grid,
+        }
     }
 
     pub fn grid(&self) -> &[u8] {

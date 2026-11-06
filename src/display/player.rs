@@ -160,13 +160,17 @@ impl Player {
 
         let next_x = self.x + self.xa;
         if self.xa > 0.0 {
-            if !world.is_solid_at(next_x + r, self.z - r) && !world.is_solid_at(next_x + r, self.z + r) {
+            if !world.is_solid_at(next_x + r, self.z - r)
+                && !world.is_solid_at(next_x + r, self.z + r)
+            {
                 self.x = next_x;
             } else {
                 self.xa = 0.0;
             }
         } else if self.xa < 0.0 {
-            if !world.is_solid_at(next_x - r, self.z - r) && !world.is_solid_at(next_x - r, self.z + r) {
+            if !world.is_solid_at(next_x - r, self.z - r)
+                && !world.is_solid_at(next_x - r, self.z + r)
+            {
                 self.x = next_x;
             } else {
                 self.xa = 0.0;
@@ -175,13 +179,17 @@ impl Player {
 
         let next_z = self.z + self.za;
         if self.za > 0.0 {
-            if !world.is_solid_at(self.x - r, next_z + r) && !world.is_solid_at(self.x + r, next_z + r) {
+            if !world.is_solid_at(self.x - r, next_z + r)
+                && !world.is_solid_at(self.x + r, next_z + r)
+            {
                 self.z = next_z;
             } else {
                 self.za = 0.0;
             }
         } else if self.za < 0.0 {
-            if !world.is_solid_at(self.x - r, next_z - r) && !world.is_solid_at(self.x + r, next_z - r) {
+            if !world.is_solid_at(self.x - r, next_z - r)
+                && !world.is_solid_at(self.x + r, next_z - r)
+            {
                 self.z = next_z;
             } else {
                 self.za = 0.0;

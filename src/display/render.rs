@@ -70,8 +70,6 @@ pub struct Renderer {
     faces: Vec<Face>,
 }
 
-
-
 impl Renderer {
     pub fn new(width: usize, height: usize) -> Self {
         Renderer {
@@ -86,7 +84,6 @@ impl Renderer {
             faces: Vec::with_capacity(512),
         }
     }
-
 
     pub fn render(&mut self, game: &Game) {
         self.render_interpolated(game, 1.0);
@@ -222,7 +219,9 @@ impl Renderer {
                 } else {
                     outside
                 };
-                let ti = base + ((u >> FIX_SHIFT) & mu) as usize + ((((v >> FIX_SHIFT) & mv) << sv) as usize);
+                let ti = base
+                    + ((u >> FIX_SHIFT) & mu) as usize
+                    + ((((v >> FIX_SHIFT) & mv) << sv) as usize);
                 *px = table[ti];
                 u = u.wrapping_add(du);
                 v = v.wrapping_add(dv);
@@ -242,7 +241,13 @@ impl Renderer {
         let mut push = |x0: usize, z0: usize, x1: usize, z1: usize| {
             let dx = (x0 + x1) as f32 * 0.5 - cx;
             let dz = (z0 + z1) as f32 * 0.5 - cz;
-            faces.push(Face { dist: dx * dx + dz * dz, x0, z0, x1, z1 });
+            faces.push(Face {
+                dist: dx * dx + dz * dz,
+                x0,
+                z0,
+                x1,
+                z1,
+            });
         };
 
         for z in 0..h {
@@ -369,7 +374,11 @@ impl Renderer {
             }
 
             let y_start = if y_top < 0.0 { 0 } else { y_top as usize };
-            let y_end = if y_bot > height_f { height } else { y_bot as usize };
+            let y_end = if y_bot > height_f {
+                height
+            } else {
+                y_bot as usize
+            };
             if y_start >= y_end {
                 continue;
             }
@@ -504,7 +513,14 @@ mod tests {
 
     #[test]
     fn internal_size_covers_window() {
-        for (w, h) in [(960, 720), (1920, 1080), (2560, 1440), (1366, 768), (800, 600), (321, 241)] {
+        for (w, h) in [
+            (960, 720),
+            (1920, 1080),
+            (2560, 1440),
+            (1366, 768),
+            (800, 600),
+            (321, 241),
+        ] {
             let (iw, ih, s) = internal_size(w, h);
             assert!(iw * s >= w && ih * s >= h);
             assert!(iw * s - w < s && ih * s - h < s); // recorte menor que un píxel interno
@@ -531,8 +547,12 @@ mod tests {
         let mut r = Renderer::new(iw, ih);
         input.turn_right = true;
 
-        let (mut t_light, mut t_floor, mut t_walls, mut t_blit) =
-            (Duration::ZERO, Duration::ZERO, Duration::ZERO, Duration::ZERO);
+        let (mut t_light, mut t_floor, mut t_walls, mut t_blit) = (
+            Duration::ZERO,
+            Duration::ZERO,
+            Duration::ZERO,
+            Duration::ZERO,
+        );
 
         for i in 0..(WARMUP + FRAMES) {
             input.forward = (i / 120) % 2 == 0;
@@ -564,10 +584,30 @@ mod tests {
         let ms = |t: Duration| t.as_secs_f64() * 1000.0 / FRAMES as f64;
         let pct = |t: Duration| 100.0 * t.as_secs_f64() / total.as_secs_f64();
         println!("\n--- ms por frame (media de {FRAMES}) ---");
-        println!("camara + luz     {:7.3} ms  {:5.1} %", ms(t_light), pct(t_light));
-        println!("suelo y techo    {:7.3} ms  {:5.1} %", ms(t_floor), pct(t_floor));
-        println!("paredes          {:7.3} ms  {:5.1} %", ms(t_walls), pct(t_walls));
-        println!("escalado ventana {:7.3} ms  {:5.1} %", ms(t_blit), pct(t_blit));
-        println!("TOTAL            {:7.3} ms  ({:.0} FPS teóricos)", ms(total), 1000.0 / ms(total));
+        println!(
+            "camara + luz     {:7.3} ms  {:5.1} %",
+            ms(t_light),
+            pct(t_light)
+        );
+        println!(
+            "suelo y techo    {:7.3} ms  {:5.1} %",
+            ms(t_floor),
+            pct(t_floor)
+        );
+        println!(
+            "paredes          {:7.3} ms  {:5.1} %",
+            ms(t_walls),
+            pct(t_walls)
+        );
+        println!(
+            "escalado ventana {:7.3} ms  {:5.1} %",
+            ms(t_blit),
+            pct(t_blit)
+        );
+        println!(
+            "TOTAL            {:7.3} ms  ({:.0} FPS teóricos)",
+            ms(total),
+            1000.0 / ms(total)
+        );
     }
 }

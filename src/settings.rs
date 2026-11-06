@@ -3,6 +3,7 @@
 use crate::app::Tab;
 use serde::{Deserialize, Serialize};
 use std::{fs, io::ErrorKind};
+use ratatui::widgets::{Block, LineGauge};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -16,7 +17,13 @@ pub struct Settings {
 
 impl Default for Settings {
     fn default() -> Self {
-        Settings { fullscreen: false, fps_limit: 60, fov: 70, color_aspect: 32, volume: 80 }
+        Settings {
+            fullscreen: false,
+            fps_limit: 60,
+            fov: 70,
+            color_aspect: 32,
+            volume: 80,
+        }
     }
 }
 
@@ -32,7 +39,7 @@ impl Settings {
         if !self.color_aspect.is_power_of_two() {
             return 0xF8;
         }
-        let bits = self.color_aspect.trailing_zeros().min(8);   // 16 → 4 bits, 128 → 7, 256 → 8
+        let bits = self.color_aspect.trailing_zeros().min(8); // 16 → 4 bits, 128 → 7, 256 → 8
         (0xFFu32 << (8 - bits)) & 0xFF
     }
 
@@ -65,11 +72,12 @@ impl Settings {
                     format!("Color Aspect       < {} >", self.color_aspect),
                 ]
             }
-            Tab::Sound => vec![format!("Volume             < {} >", self.volume)],
+            Tab::Sound => vec![
+                format!("Volume             < {} >", self.volume),
+            ],
             Tab::Controls => vec![],
         }
     }
-
 
     /// Cambia la opción de la fila `row` de la pestaña `tab`. `dir` es -1 (izquierda) o +1 (derecha).
     /// El orden de filas debe coincidir con `rows()`.
@@ -77,14 +85,21 @@ impl Settings {
         match (tab, row) {
             (Tab::Video, 0) => self.fullscreen = !self.fullscreen,
             (Tab::Video, 1) => {
-                let i = FPS_OPTIONS.iter().position(|&f| f == self.fps_limit).unwrap_or(1) as i32;
-                self.fps_limit = FPS_OPTIONS[(i + dir).rem_euclid(FPS_OPTIONS.len() as i32) as usize];
+                let i = FPS_OPTIONS
+                    .iter()
+                    .position(|&f| f == self.fps_limit)
+                    .unwrap_or(1) as i32;
+                self.fps_limit =
+                    FPS_OPTIONS[(i + dir).rem_euclid(FPS_OPTIONS.len() as i32) as usize];
             }
             (Tab::Video, 2) => {
                 self.fov = (self.fov as i32 + dir * 5).clamp(FOV_MIN as i32, FOV_MAX as i32) as u32;
             }
             (Tab::Video, 3) => {
-                let i = COLOR_OPTIONS.iter().position(|&l| l == self.color_aspect).unwrap_or(1) as i32;
+                let i = COLOR_OPTIONS
+                    .iter()
+                    .position(|&l| l == self.color_aspect)
+                    .unwrap_or(1) as i32;
                 let n = COLOR_OPTIONS.len() as i32;
                 self.color_aspect = COLOR_OPTIONS[(i + dir).rem_euclid(n) as usize];
             }
@@ -114,7 +129,9 @@ impl Settings {
             Ok(text) => match toml::from_str::<Settings>(&text) {
                 Ok(settings) => settings.sanitized(),
                 Err(e) => {
-                    eprintln!("{SETTINGS_FILE} no es válido ({e}); se usan los valores por defecto.");
+                    eprintln!(
+                        "{SETTINGS_FILE} no es válido ({e}); se usan los valores por defecto."
+                    );
                     Settings::default()
                 }
             },
@@ -130,7 +147,8 @@ impl Settings {
     pub fn save(&self) {
         match toml::to_string_pretty(self) {
             Ok(body) => {
-                let text = format!("# Dungeon - opciones (se sobrescribe al salir del menu)\n{body}");
+                let text =
+                    format!("# Dungeon - opciones (se sobrescribe al salir del menu)\n{body}");
                 if let Err(e) = fs::write(SETTINGS_FILE, text) {
                     eprintln!("No se pudo guardar {SETTINGS_FILE}: {e}");
                 }
@@ -146,7 +164,11 @@ mod tests {
 
     #[test]
     fn roundtrip() {
-        let s = Settings { fov: 90, color_aspect: 16, ..Settings::default() };
+        let s = Settings {
+            fov: 90,
+            color_aspect: 16,
+            ..Settings::default()
+        };
         let text = toml::to_string_pretty(&s).unwrap();
         let back: Settings = toml::from_str(&text).unwrap();
         assert!(s == back);
@@ -164,6 +186,9 @@ mod tests {
         let s: Settings =
             toml::from_str("fov = 500\nfps_limit = 45\ncolor_aspect = 17\nvolume = 200").unwrap();
         let s = s.sanitized();
-        assert_eq!((s.fov, s.fps_limit, s.color_aspect, s.volume), (110, 60, 32, 100));
+        assert_eq!(
+            (s.fov, s.fps_limit, s.color_aspect, s.volume),
+            (110, 60, 32, 100)
+        );
     }
 }

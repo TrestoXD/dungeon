@@ -106,7 +106,9 @@ impl Default for App {
 impl App {
     /// Se llama una vez por vuelta del bucle: ejecuta la acción cuando termina el efecto del botón.
     pub fn tick(&mut self) -> Action {
-        let Some((item, since)) = self.pressed else { return Action::None };
+        let Some((item, since)) = self.pressed else {
+            return Action::None;
+        };
         if since.elapsed() < PRESS_TIME {
             return Action::None;
         }
@@ -123,7 +125,10 @@ impl App {
 
     /// Menú nuevo que conserva las opciones de la partida anterior.
     pub fn with_settings(settings: Settings) -> Self {
-        App { settings, ..App::default() }
+        App {
+            settings,
+            ..App::default()
+        }
     }
 
     pub fn on_key(&mut self, key: KeyEvent) -> Action {
@@ -187,7 +192,9 @@ impl App {
             self.screen = Screen::Menu;
             return;
         }
-        let Screen::Config(cfg) = &mut self.screen else { return };
+        let Screen::Config(cfg) = &mut self.screen else {
+            return;
+        };
         match code {
             KeyCode::Tab => {
                 cfg.tab = cfg.tab.next();
@@ -211,7 +218,10 @@ impl App {
     }
 
     fn open_config(&mut self) {
-        self.screen = Screen::Config(ConfigState { tab: Tab::Video, row: 0 });
+        self.screen = Screen::Config(ConfigState {
+            tab: Tab::Video,
+            row: 0,
+        });
     }
 }
 
