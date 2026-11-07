@@ -7,7 +7,7 @@ use ratatui::{
     symbols,
     widgets::{Block, Clear, List, ListState, Paragraph, Tabs},
 };
-use ratatui::widgets::{Borders, LineGauge};
+use ratatui::widgets::{ LineGauge};
 use crate::app::{ConfigState, Tab};
 use crate::settings::Settings;
 

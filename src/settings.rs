@@ -3,7 +3,6 @@
 use crate::app::Tab;
 use serde::{Deserialize, Serialize};
 use std::{fs, io::ErrorKind};
-use ratatui::widgets::{Block, LineGauge};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]

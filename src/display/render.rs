@@ -4,7 +4,10 @@
 
 use crate::display::game::Game;
 use crate::display::lighting::Lighting;
-use crate::display::texture::{DEFAULT_COLOR_MASK, DEFAULT_FOG_SHIFT, Textures};
+use crate::display::sprite::{self, Sprite};
+use crate::display::texture::{
+    ALPHA_CUTOUT, Bitmap, DEFAULT_COLOR_MASK, DEFAULT_FOG_SHIFT, Textures, shade_factors,
+};
 use crate::display::world::{AIR, SOLID, World};
 
 pub const RENDER_WIDTH: usize = 320;
@@ -68,6 +71,9 @@ pub struct Renderer {
     z_buffer: Vec<f32>,
     cam: Camera,
     faces: Vec<Face>,
+    sprite_images: Vec<Bitmap>,
+    sprite_order: Vec<(f32, usize)>,   // (profundidad, índice), se reutiliza cada frame
+    color_mask: u32,
 }
 
 impl Renderer {
@@ -82,6 +88,9 @@ impl Renderer {
             z_buffer: vec![0.0; width],
             cam: Camera::default(),
             faces: Vec::with_capacity(512),
+            sprite_images: sprite::load_images(),
+            sprite_order: Vec::with_capacity(16),
+            color_mask: DEFAULT_COLOR_MASK,
         }
     }
 
@@ -97,6 +106,7 @@ impl Renderer {
         self.lighting.update(lx, lz, &game.world, game.time);
         self.render_floor_and_ceiling(&game.world);
         self.render_walls(&game.world);
+        self.render_sprites(game);
     }
 
     fn setup_camera(&mut self, game: &Game, alpha: f32) {
@@ -143,6 +153,131 @@ impl Renderer {
         };
     }
 
+
+    /// Luz en un punto (en celdas): el mismo bilineal que usa el suelo.
+    fn sample_light(&self, x: f32, z: f32, world: &World) -> i32 {
+        let cx = (x.floor() as i32).clamp(0, world.width as i32 - 1);
+        let cz = (z.floor() as i32).clamp(0, world.height as i32 - 1);
+        let fx = (((x - cx as f32) * 256.0) as i32).clamp(0, 255);
+        let fz = (((z - cz as f32) * 256.0) as i32).clamp(0, 255);
+        let ls = self.lighting.stride;
+        let lv = &self.lighting.vertex_light;
+        let i = cx as usize + cz as usize * ls;
+        let (a, b, c, d) = (lv[i], lv[i + 1], lv[i + ls], lv[i + ls + 1]);
+        let top = a + (((b - a) * fx) >> 8);
+        let bot = c + (((d - c) * fx) >> 8);
+        top + (((bot - top) * fz) >> 8)
+    }
+
+    fn render_sprites(&mut self, game: &Game) {
+        if game.sprites.is_empty() {
+            return;
+        }
+        let cam = self.cam;
+        let mut order = std::mem::take(&mut self.sprite_order);
+        order.clear();
+        for (i, s) in game.sprites.iter().enumerate() {
+            let dx = (s.x as f32 / 16.0 - cam.cam_x) * 2.0;
+            let dz = (s.z as f32 / 16.0 - cam.cam_z) * 2.0;
+            let depth = dz * cam.cosine + dx * cam.sine;
+            if depth >= CLIP {
+                order.push((depth, i));
+            }
+        }
+        // De lejos a cerca: los cercanos se pintan encima.
+        order.sort_unstable_by(|a, b| b.0.total_cmp(&a.0));
+        for &(_, i) in &order {
+            self.render_sprite(&game.sprites[i], &game.world);
+        }
+        self.sprite_order = order;
+    }
+
+    fn render_sprite(&mut self, s: &Sprite, world: &World) {
+        let cam = self.cam;
+        let width = self.width;
+        let height = self.height;
+        let height_f = height as f32;
+        let Some(img) = self.sprite_images.get(s.kind as usize) else { return };
+        let (tw, th) = (img.width, img.height);
+
+        // Posición en el espacio de la cámara (mismas unidades que las paredes: 1 celda = 2).
+        let (sx, sz) = (s.x as f32 / 16.0, s.z as f32 / 16.0);
+        let dx = (sx - cam.cam_x) * 2.0;
+        let dz = (sz - cam.cam_z) * 2.0;
+        let lx = dx * cam.cosine - dz * cam.sine;
+        let lz = dz * cam.cosine + dx * cam.sine;
+        if lz < CLIP {
+            return;
+        }
+        let inv_lz = 1.0 / lz;
+
+        // Horizontal: centro en pantalla y semiancho (el ancho en celdas ya es 2 unidades / 2).
+        let width_cells = s.height * tw as f32 / th as f32;
+        let half_px = width_cells * inv_lz * cam.focal;
+        let center = lx * inv_lz * cam.focal + cam.half_w;
+        let x_left = (center - half_px).floor();
+        let x_right = (center + half_px).floor();
+        if x_right <= x_left {
+            return;
+        }
+        let x0 = (x_left as i32).clamp(0, width as i32) as usize;
+        let x1 = (x_right as i32).clamp(0, width as i32) as usize;
+        if x0 >= x1 {
+            return;
+        }
+
+        // Vertical: los pies en el suelo (la misma base que las paredes) y la cabeza a `height` celdas.
+        let y_bot_corner = (0.5 - cam.cam_y_correction) * 2.0;
+        let y_top_corner = (0.5 - s.height - cam.cam_y_correction) * 2.0;
+        let y_look_off = cam.half_h + cam.y_look;
+        let y_top = (y_top_corner * inv_lz * cam.focal + y_look_off).floor();
+        let y_bot = (y_bot_corner * inv_lz * cam.focal + y_look_off).floor();
+        if y_bot <= y_top {
+            return;
+        }
+        let y_start = if y_top < 0.0 { 0 } else { y_top as usize };
+        let y_end = if y_bot > height_f { height } else { y_bot as usize };
+        if y_start >= y_end {
+            return;
+        }
+
+        // Color: misma niebla (y mismos escalones) que las paredes, calculado una vez por sprite.
+        let (fog, max_level) = (self.textures.block.fog_shift, self.textures.block.max_level);
+        let level = (self.sample_light(sx, sz, world) >> fog).clamp(0, max_level);
+        let (fr, fg, fb) = shade_factors(level as f32 / max_level as f32);
+        let (fr, fg, fb) = ((fr * 256.0) as u32, (fg * 256.0) as u32, (fb * 256.0) as u32);
+        let mask = self.color_mask;
+
+        let inv_span = 1.0 / (x_right - x_left);
+        let v_step = th as f32 / (y_bot - y_top);
+        let v0 = (y_start as f32 + 0.5 - y_top) * v_step;
+
+        for x in x0..x1 {
+            if self.z_buffer[x] > inv_lz {
+                continue; // una pared más cercana lo tapa en esta columna
+            }
+            let tx = (((x as f32 + 0.5 - x_left) * inv_span * tw as f32) as usize).min(tw - 1);
+            let mut v = v0;
+            let mut idx = y_start * width + x;
+            for _ in y_start..y_end {
+                let t = (v as usize).min(th - 1) * tw + tx;
+                if img.alpha[t] >= ALPHA_CUTOUT {
+                    let c = img.pixels[t];
+                    let r = ((((c >> 16) & 0xFF) * fr) >> 8) & mask;
+                    let g = ((((c >> 8) & 0xFF) * fg) >> 8) & mask;
+                    let b = (((c & 0xFF) * fb) >> 8) & mask;
+                    self.pixels[idx] = (r << 16) | (g << 8) | b;
+                }
+                idx += width;
+                v += v_step;
+            }
+        }
+    }
+
+    pub fn set_color(&mut self, mask: u32, fog_shift: u32) {
+        self.color_mask = mask;
+        self.textures = Textures::load(mask, fog_shift);
+    }
     pub fn set_color_mask(&mut self, mask: u32, fog_shift: u32) {
         self.textures = Textures::load(mask, fog_shift);
     }
@@ -355,6 +490,8 @@ impl Renderer {
 
         let shift = tex.tile_shift;
         let fog = tex.fog_shift;
+        let alpha = &tex.alpha[..];
+        let has_cutout = tex.has_cutout;
         let max_level = tex.max_level;
         let (mu, mv, sv) = (tex.mask_u, tex.mask_v, tex.shift_v);
 
@@ -384,17 +521,29 @@ impl Renderer {
             }
 
             let level = (((light_l + d_light * t) as i32) >> fog).clamp(0, max_level);
-            let base = ((level as usize) << shift) + (((u_l + d_u * t) as i32) & mu) as usize;
+            let u_idx = (((u_l + d_u * t) as i32) & mu) as usize;
+            let base = ((level as usize) << shift) + u_idx;
 
             let v_step = tex_h / (y_bot - y_top);
             let dv = (v_step * FIX_ONE) as i32;
             let mut v = (((y_start as f32 - y_top) * v_step * FIX_ONE) as i32).max(0);
 
             let mut idx = y_start * width + x;
-            for _ in y_start..y_end {
-                self.pixels[idx] = table[base + ((((v >> FIX_SHIFT) & mv) << sv) as usize)];
-                idx += width;
-                v = v.wrapping_add(dv);
+            if has_cutout {
+                for _ in y_start..y_end {
+                    let row = (((v >> FIX_SHIFT) & mv) << sv) as usize;
+                    if alpha[u_idx + row] >= ALPHA_CUTOUT {
+                        self.pixels[idx] = table[base + row];
+                    }
+                    idx += width;
+                    v = v.wrapping_add(dv);
+                }
+            } else {
+                for _ in y_start..y_end {
+                    self.pixels[idx] = table[base + ((((v >> FIX_SHIFT) & mv) << sv) as usize)];
+                    idx += width;
+                    v = v.wrapping_add(dv);
+                }
             }
         }
     }
@@ -527,6 +676,38 @@ mod tests {
             assert!(ih <= TARGET_HEIGHT);
         }
         assert_eq!(internal_size(960, 720), (320, 240, 3));
+    }
+
+    #[test]
+    fn transparent_wall_texture_shows_the_floor() {
+        use crate::display::texture::{Bitmap, ShadedTexture};
+        let g = game(42);
+
+        let mut opaque = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+        opaque.render(&g);
+
+        let mut cut = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+        let invisible = Bitmap::from_rgba(&[0u8; 16 * 16 * 4], 16, 16); // todo alpha 0
+        cut.textures.stone = ShadedTexture::new(&invisible, 0xF8, 8);
+        cut.render(&g);
+
+        assert!(cut.textures.stone.has_cutout);
+        assert!(opaque.pixels != cut.pixels); // las paredes han desaparecido
+    }
+
+    #[test]
+    fn sprite_is_drawn_in_front_of_the_player() {
+        use crate::display::sprite::{Sprite, SpriteKind};
+        let mut g = game(5);
+        g.sprites.clear();
+        let mut r = Renderer::new(RENDER_WIDTH, RENDER_HEIGHT);
+        r.render(&g);
+        let without = r.pixels.clone();
+
+        // rotación 0 mira hacia +z; a 6 unidades sigue dentro de la celda de aparición
+        g.sprites.push(Sprite::new(SpriteKind::Waifu, g.player.x, g.player.z + 6.0));
+        r.render(&g);
+        assert!(r.pixels != without);
     }
 
     #[test]

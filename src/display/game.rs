@@ -1,25 +1,29 @@
 use crate::display::player::{Input, Player};
 use crate::display::rng::Rng;
-use crate::display::world::World;
+use crate::display::sprite::{Sprite, SpriteKind};
+use crate::display::world::{CELL, World};
 
-// Structure of the Game
 pub struct Game {
     pub time: i32,
     pub player: Player,
     pub world: World,
+    pub sprites: Vec<Sprite>,   // <- nuevo
 }
-
 impl Game {
     pub fn new(rng: &mut Rng) -> Self {
-        // Create the world
         let world = World::generate(16, 16, rng);
-        // Create the plyer
         let player = Player::new(world.spawn.0, world.spawn.1);
-        Game {
-            time: 0,
-            player,
-            world,
-        }
+
+        // El rng del mundo ya se usó, así que no cambia los mundos de cada semilla.
+        let (cx, cz) = world.random_open_cell(rng, 4.0);
+        println!("Sprite en la celda {cx} {cz}");
+        let sprites = vec![Sprite::new(
+            SpriteKind::Waifu,
+            cx as f64 * CELL + CELL / 2.0,
+            cz as f64 * CELL + CELL / 2.0,
+        )];
+
+        Game { time: 0, player, world, sprites }
     }
 
     // Tick Function

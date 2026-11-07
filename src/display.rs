@@ -6,6 +6,7 @@ mod render;
 mod rng;
 mod texture;
 mod world;
+mod sprite;
 
 use std::num::NonZeroU32;
 use std::rc::Rc;
@@ -380,6 +381,8 @@ impl ApplicationHandler for App {
         }
     }
 }
+
+
 
 pub fn run_game(settings: &Settings, event_loop: &mut EventLoop<()>) -> Result<()> {
     let seed = Rng::from_time().next_u64();

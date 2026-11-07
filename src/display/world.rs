@@ -89,6 +89,23 @@ impl World {
         }
     }
 
+    /// Una celda libre al azar, a `min_dist` celdas o más de la aparición del jugador.
+    /// Todas las celdas libres están conectadas, así que siempre se puede llegar a ella.
+    pub fn random_open_cell(&self, rng: &mut Rng, min_dist: f64) -> (usize, usize) {
+        let (sx, sz) = (self.spawn.0 / CELL, self.spawn.1 / CELL);
+        let far: Vec<(usize, usize)> = (0..self.height)
+            .flat_map(|z| (0..self.width).map(move |x| (x, z)))
+            .filter(|&(x, z)| !self.cells[x + z * self.width])
+            .filter(|&(x, z)| {
+                let (dx, dz) = (x as f64 + 0.5 - sx, z as f64 + 0.5 - sz);
+                (dx * dx + dz * dz).sqrt() >= min_dist
+            })
+            .collect();
+        if far.is_empty() {
+            return (sx as usize, sz as usize); // mundo diminuto: la propia celda de aparición
+        }
+        far[rng.below(far.len())]
+    }
     pub fn grid(&self) -> &[u8] {
         &self.grid
     }
@@ -148,6 +165,16 @@ mod tests {
                 assert!(w.is_solid_at(i as f64 * CELL + 1.0, 15.0 * CELL + 1.0));
                 assert!(w.is_solid_at(15.0 * CELL + 1.0, i as f64 * CELL + 1.0));
             }
+        }
+    }
+
+    #[test]
+    fn random_open_cell_is_open() {
+        for seed in 0..50 {
+            let mut rng = Rng::new(seed);
+            let w = World::generate(16, 16, &mut rng);
+            let (x, z) = w.random_open_cell(&mut rng, 4.0);
+            assert!(!w.is_solid_at(x as f64 * CELL + 8.0, z as f64 * CELL + 8.0));
         }
     }
 
