@@ -22,6 +22,12 @@ const CLIP: f32 = 0.1;
 const WALL_LEVELS: f32 = 3.0;
 /// 1 = vértices al píxel entero (temblor PSX puro).
 const SNAP: f32 = 1.0;
+/// Lado de un chunk de paredes, en celdas.
+const CHUNK: usize = 16;
+/// Más allá de este radio (en celdas) las paredes no se dibujan. Coincide con el límite del
+/// suelo y el techo (Z_CUTOFF en unidades de mundo / 16 por celda). Si algún día subes mucho
+/// la luz ambiente, súbelo también.
+const WALL_RANGE: f32 = Z_CUTOFF / 16.0 + 2.0;
 
 const FIX_SHIFT: u32 = 16;
 const FIX_ONE: f32 = 65536.0;
@@ -52,15 +58,59 @@ struct Camera {
     focal: f32,
 }
 
+/// Cara de pared: del vértice (x0, z0) al (x1, z1), en coordenadas de rejilla.
 #[derive(Clone, Copy)]
 struct Face {
-    dist: f32,
     x0: usize,
     z0: usize,
     x1: usize,
     z1: usize,
 }
 
+/// Caras de pared agrupadas en chunks de CHUNK×CHUNK celdas. Se construye una vez por mundo.
+struct ChunkedFaces {
+    version: Option<u32>,
+    chunks_w: usize,
+    chunks_h: usize,
+    chunks: Vec<Vec<Face>>,
+}
+
+impl ChunkedFaces {
+    fn empty() -> Self {
+        ChunkedFaces { version: None, chunks_w: 0, chunks_h: 0, chunks: Vec::new() }
+    }
+
+    fn build(world: &World) -> Self {
+        let (w, h) = (world.width, world.height);
+        let (cw, ch) = (w.div_ceil(CHUNK), h.div_ceil(CHUNK));
+        let mut chunks: Vec<Vec<Face>> = vec![Vec::new(); cw * ch];
+        let s = world.grid_stride();
+        let grid = world.grid();
+
+        for z in 0..h {
+            for x in 0..w {
+                let i = (x + 1) + (z + 1) * s;
+                if grid[i] != SOLID {
+                    continue;
+                }
+                let chunk = &mut chunks[x / CHUNK + (z / CHUNK) * cw];
+                if grid[i - s] == AIR {
+                    chunk.push(Face { x0: x, z0: z, x1: x + 1, z1: z }); // norte
+                }
+                if grid[i + s] == AIR {
+                    chunk.push(Face { x0: x + 1, z0: z + 1, x1: x, z1: z + 1 }); // sur
+                }
+                if grid[i - 1] == AIR {
+                    chunk.push(Face { x0: x, z0: z + 1, x1: x, z1: z }); // oeste
+                }
+                if grid[i + 1] == AIR {
+                    chunk.push(Face { x0: x + 1, z0: z, x1: x + 1, z1: z + 1 }); // este
+                }
+            }
+        }
+        ChunkedFaces { version: Some(world.version), chunks_w: cw, chunks_h: ch, chunks }
+    }
+}
 pub struct Renderer {
     pub width: usize,
     pub height: usize,
@@ -70,7 +120,8 @@ pub struct Renderer {
     textures: Textures,
     z_buffer: Vec<f32>,
     cam: Camera,
-    faces: Vec<Face>,
+    wall_chunks: ChunkedFaces,
+    visible: Vec<(f32, Face)>,   // (distancia², cara): se reutiliza cada frame
     sprite_images: Vec<Bitmap>,
     sprite_order: Vec<(f32, usize)>,   // (profundidad, índice), se reutiliza cada frame
     color_mask: u32,
@@ -87,7 +138,8 @@ impl Renderer {
             textures: Textures::load(DEFAULT_COLOR_MASK, DEFAULT_FOG_SHIFT),
             z_buffer: vec![0.0; width],
             cam: Camera::default(),
-            faces: Vec::with_capacity(512),
+            wall_chunks: ChunkedFaces::empty(),
+            visible: Vec::with_capacity(2048),
             sprite_images: sprite::load_images(),
             sprite_order: Vec::with_capacity(16),
             color_mask: DEFAULT_COLOR_MASK,
@@ -365,53 +417,38 @@ impl Renderer {
     }
 
     fn render_walls(&mut self, world: &World) {
-        let (w, h) = (world.width, world.height);
-        let s = world.grid_stride();
-        let grid = world.grid();
+        if self.wall_chunks.version != Some(world.version) {
+            self.wall_chunks = ChunkedFaces::build(world);
+        }
         let (cx, cz) = (self.cam.cam_x, self.cam.cam_z);
+        let cs = CHUNK as f32;
+        let cw = self.wall_chunks.chunks_w;
 
         // Se saca el Vec de self para poder llamar a render_wall (&mut self) mientras se recorre.
-        let mut faces = std::mem::take(&mut self.faces);
-        faces.clear();
-        let mut push = |x0: usize, z0: usize, x1: usize, z1: usize| {
-            let dx = (x0 + x1) as f32 * 0.5 - cx;
-            let dz = (z0 + z1) as f32 * 0.5 - cz;
-            faces.push(Face {
-                dist: dx * dx + dz * dz,
-                x0,
-                z0,
-                x1,
-                z1,
-            });
-        };
-
-        for z in 0..h {
-            for x in 0..w {
-                let i = (x + 1) + (z + 1) * s;
-                if grid[i] != SOLID {
+        let mut visible = std::mem::take(&mut self.visible);
+        visible.clear();
+        for chz in 0..self.wall_chunks.chunks_h {
+            for chx in 0..cw {
+                // distancia de la cámara al rectángulo del chunk
+                let dx = (chx as f32 * cs - cx).max(cx - (chx + 1) as f32 * cs).max(0.0);
+                let dz = (chz as f32 * cs - cz).max(cz - (chz + 1) as f32 * cs).max(0.0);
+                if dx * dx + dz * dz > WALL_RANGE * WALL_RANGE {
                     continue;
                 }
-                if grid[i - s] == AIR {
-                    push(x, z, x + 1, z); // norte
-                }
-                if grid[i + s] == AIR {
-                    push(x + 1, z + 1, x, z + 1); // sur
-                }
-                if grid[i - 1] == AIR {
-                    push(x, z + 1, x, z); // oeste
-                }
-                if grid[i + 1] == AIR {
-                    push(x + 1, z, x + 1, z + 1); // este
+                for f in &self.wall_chunks.chunks[chx + chz * cw] {
+                    let mx = (f.x0 + f.x1) as f32 * 0.5 - cx;
+                    let mz = (f.z0 + f.z1) as f32 * 0.5 - cz;
+                    visible.push((mx * mx + mz * mz, *f));
                 }
             }
         }
 
-        // De la más cercana a la más lejana.
-        faces.sort_unstable_by(|a, b| a.dist.total_cmp(&b.dist));
-        for f in &faces {
+        // De la más cercana a la más lejana (el z-buffer descarta lo tapado casi sin trabajo).
+        visible.sort_unstable_by(|a, b| a.0.total_cmp(&b.0));
+        for &(_, f) in &visible {
             self.render_wall(f.x0, f.z0, f.x1, f.z1);
         }
-        self.faces = faces;
+        self.visible = visible;
     }
 
     /// Cara de celda de (xl0, zl0) a (xr0, zr0), en coordenadas enteras de rejilla.
@@ -650,6 +687,34 @@ mod tests {
         }
     }
 
+    #[test]
+    fn chunk_cache_has_every_exposed_face() {
+        let g = game(11);
+        let cache = ChunkedFaces::build(&g.world);
+        let total: usize = cache.chunks.iter().map(|c| c.len()).sum();
+
+        let (w, h) = (g.world.width, g.world.height);
+        let solid = |x: i32, z: i32| {
+            x < 0 || z < 0 || x as usize >= w || z as usize >= h
+                || g.world.is_solid_at(x as f64 * 16.0 + 1.0, z as f64 * 16.0 + 1.0)
+        };
+        let mut expected = 0;
+        for z in 0..h as i32 {
+            for x in 0..w as i32 {
+                if !solid(x, z) {
+                    continue;
+                }
+                for (dx, dz) in [(0, -1), (0, 1), (-1, 0), (1, 0)] {
+                    let (nx, nz) = (x + dx, z + dz);
+                    let in_map = nx >= 0 && nz >= 0 && (nx as usize) < w && (nz as usize) < h;
+                    if in_map && !solid(nx, nz) {
+                        expected += 1;
+                    }
+                }
+            }
+        }
+        assert_eq!(total, expected);
+    }
     #[test]
     fn blit_scales_and_crops() {
         let src = [1u32, 2, 3, 4]; // 2x2 a escala 3 = 6x6, ventana 5x5: recorta

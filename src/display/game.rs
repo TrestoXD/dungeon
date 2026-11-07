@@ -11,7 +11,7 @@ pub struct Game {
 }
 impl Game {
     pub fn new(rng: &mut Rng) -> Self {
-        let world = World::generate(16, 16, rng);
+        let world = World::generate(128, 128, rng);
         let player = Player::new(world.spawn.0, world.spawn.1);
 
         // El rng del mundo ya se usó, así que no cambia los mundos de cada semilla.
